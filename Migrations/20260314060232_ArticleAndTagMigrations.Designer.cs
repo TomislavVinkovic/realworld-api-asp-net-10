@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using dotnet_api_tutorial.Data;
 
@@ -11,9 +12,11 @@ using dotnet_api_tutorial.Data;
 namespace dotnet_api_tutorial.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260314060232_ArticleAndTagMigrations")]
+    partial class ArticleAndTagMigrations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,21 +38,6 @@ namespace dotnet_api_tutorial.Migrations
                     b.HasIndex("FavoritedById");
 
                     b.ToTable("UserFavorites", (string)null);
-                });
-
-            modelBuilder.Entity("UserUser", b =>
-                {
-                    b.Property<int>("FollowersId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FollowingId")
-                        .HasColumnType("int");
-
-                    b.HasKey("FollowersId", "FollowingId");
-
-                    b.HasIndex("FollowingId");
-
-                    b.ToTable("UserUser");
                 });
 
             modelBuilder.Entity("dotnet_api_tutorial.Models.Article", b =>
@@ -172,21 +160,6 @@ namespace dotnet_api_tutorial.Migrations
                     b.HasOne("dotnet_api_tutorial.Models.User", null)
                         .WithMany()
                         .HasForeignKey("FavoritedById")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("UserUser", b =>
-                {
-                    b.HasOne("dotnet_api_tutorial.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("FollowersId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("dotnet_api_tutorial.Models.User", null)
-                        .WithMany()
-                        .HasForeignKey("FollowingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

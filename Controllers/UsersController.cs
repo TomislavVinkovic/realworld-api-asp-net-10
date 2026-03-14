@@ -2,15 +2,12 @@ using System.Security.Claims;
 using dotnet_api_tutorial.Data;
 using dotnet_api_tutorial.DTOs;
 using dotnet_api_tutorial.Models;
-using dotnet_api_tutorial.Services;
+using dotnet_api_tutorial.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 namespace dotnet_api_tutorial.Controllers;
-
-    
     [Route("api/[controller]")]
     [ApiController]
     public class UsersController : ControllerBase

@@ -1,6 +1,7 @@
 using System.Text;
 using dotnet_api_tutorial.Data;
 using dotnet_api_tutorial.Services;
+using dotnet_api_tutorial.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;

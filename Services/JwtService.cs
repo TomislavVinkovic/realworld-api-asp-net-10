@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using dotnet_api_tutorial.Models;
+using dotnet_api_tutorial.Services.Interface;
 using Microsoft.IdentityModel.Tokens;
 
 namespace dotnet_api_tutorial.Services;

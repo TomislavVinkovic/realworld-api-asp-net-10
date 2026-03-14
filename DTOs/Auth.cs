@@ -1,5 +1,3 @@
-using dotnet_api_tutorial.Models;
-
 namespace dotnet_api_tutorial.DTOs;
 
 public record RegisterDto(string Username, string Email, string Password);
