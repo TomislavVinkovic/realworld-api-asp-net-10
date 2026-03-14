@@ -41,7 +41,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 
 // Learn more about configuring OpenAPI at 
-builder.Services.AddOpenApi(); 
+builder.Services.AddOpenApi();
+
+builder.Services.AddHttpContextAccessor();
 
 var app = builder.Build();
 

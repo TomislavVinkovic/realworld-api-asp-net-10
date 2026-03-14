@@ -1,5 +1,7 @@
 using dotnet_api_tutorial.Data;
 using dotnet_api_tutorial.DTOs;
+using dotnet_api_tutorial.Models;
+using dotnet_api_tutorial.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -12,56 +14,65 @@ namespace MyApp.Namespace
     public class ArticlesController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private IArticleService _articleService;
 
-        public ArticlesController(AppDbContext context)
+        public ArticlesController(
+            AppDbContext context,
+            IArticleService articleService
+        )
         {
             _context = context;
+            _articleService = articleService;
         }
 
         [HttpGet("")]
         public async Task<ActionResult> List([FromQuery] ArticleQueryParameters query)
         {
-            var articlesQuery = _context.Articles
-                .Include(a => a.Author)
-                .Include(a => a.TagList)
-                .AsQueryable();
             
-            if(!string.IsNullOrWhiteSpace(query.Author))
-            {
-                articlesQuery = articlesQuery.Where(a => a.Author.Username == query.Author);
-            }
-            if(!string.IsNullOrWhiteSpace(query.Tag))
-            {
-                articlesQuery = articlesQuery.Where(a => a.TagList.Any(t => t.TagText == query.Tag));
-            }
-            if (!string.IsNullOrWhiteSpace(query.Favorited))
-            {
-                articlesQuery = articlesQuery.Where(a => a.FavoritedBy.Any(f => f.Username == query.Favorited));
-            }
-
-            // First DB query: Count the total number of articles
-            var totalCount = await articlesQuery.CountAsync();
-            var articles = await articlesQuery
-                .OrderByDescending(a => a.CreatedAt)
-                .Skip(query.Offset)
-                .Take(query.Limit)
-                .ToListAsync();
+            var (articles, articleCount) = await _articleService.GetArticlesAsync(query);
 
             return Ok(
                 new
                 {
-                    articles = articles,
-                    articleCount = totalCount
+                    articles,
+                    articleCount
                 }
             );
         }
 
         [Authorize]
-        [HttpGet]
+        [HttpGet("feed")]
         public async Task<ActionResult> Feed([FromQuery] ArticleQueryParameters query)
         {
-            throw new NotImplementedException();
+            var (articles, articleCount) = await _articleService.GetArticlesAsync(query, isFeed: true);
+
+            return Ok(
+                new
+                {
+                    articles,
+                    articleCount
+                }
+            );
         }
 
+        [Authorize]
+        [HttpGet("{slug}")]
+        public async Task<ActionResult> GetArticle(string slug)
+        {
+            var article = _articleService.GetArticleBySlug(slug);
+            if(article == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(new {article});
+        }
+
+        [Authorize]
+        [HttpPost("")]
+        public async Task<ActionResult> CreateArticle(CreateArticleRequest request)
+        {
+            
+        }
     }
 }

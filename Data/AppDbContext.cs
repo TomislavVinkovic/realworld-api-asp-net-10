@@ -34,6 +34,10 @@ public class AppDbContext : DbContext
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Article>()
+            .HasIndex(a => a.Slug)
+            .IsUnique();
+
+        modelBuilder.Entity<Article>()
             .HasOne(a => a.Author)
             .WithMany(u => u.WrittenArticles)
             .HasForeignKey(a => a.AuthorId)
