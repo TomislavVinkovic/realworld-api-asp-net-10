@@ -59,7 +59,7 @@ namespace MyApp.Namespace
         [HttpGet("{slug}")]
         public async Task<ActionResult> GetArticle(string slug)
         {
-            var article = _articleService.GetArticleBySlug(slug);
+            var article = await _articleService.GetArticleBySlugAsync(slug);
             if(article == null)
             {
                 return NotFound();
@@ -72,7 +72,35 @@ namespace MyApp.Namespace
         [HttpPost("")]
         public async Task<ActionResult> CreateArticle(CreateArticleRequest request)
         {
+            try
+            {
+                var article = await _articleService.CreateAsync(request.article);
+                return Ok(new {article});
+            }
+            catch(UnauthorizedAccessException _)
+            {
+                return Unauthorized();
+            }
             
+        }
+
+        [Authorize]
+        [HttpPut("{slug}")]
+        public async Task<ActionResult> UpdateArticle(string slug, UpdateArticleRequest request)
+        {
+            try
+            {
+                bool deleted = await _articleService.DeleteAsync(slug);
+                if(!deleted)
+                {
+                    return NotFound();
+                }
+                return Ok();
+            }
+            catch (UnauthorizedAccessException _)
+            {
+                return Unauthorized();
+            }
         }
     }
 }

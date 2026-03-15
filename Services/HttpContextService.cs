@@ -1,0 +1,24 @@
+using System.Security.Claims;
+using dotnet_api_tutorial.Services.Interface;
+
+namespace dotnet_api_tutorial.Services;
+
+class HttpContextService : IHttpContextService
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public HttpContextService(
+        IHttpContextAccessor httpContextAccessor
+    )
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public int? GetCurrentUserId()
+    {
+        var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier).Value;
+        int currentUserId = int.Parse(userIdString);
+
+        return currentUserId;
+    }
+}

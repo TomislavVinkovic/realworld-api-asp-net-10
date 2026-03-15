@@ -16,7 +16,6 @@ namespace dotnet_api_tutorial.Controllers;
     private readonly AppDbContext _context;
     private readonly IJwtService _jwtService;
 
-    // Inject our new service alongside the database context
     public UsersController(AppDbContext context, IJwtService jwtService)
     {
         _context = context;

@@ -51,6 +51,10 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>()
             .HasMany(u => u.Following)
             .WithMany(u => u.Followers)
-            .UsingEntity(j => j.ToTable("UserFollows"));
+            .UsingEntity<Dictionary<string, object>>(
+                "UserFollows",
+                j => j.HasOne<User>().WithMany().HasForeignKey("FollowingId"),
+                j => j.HasOne<User>().WithMany().HasForeignKey("FollowerId")
+            );
     }
 }

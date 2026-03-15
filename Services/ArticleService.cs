@@ -14,15 +14,15 @@ namespace dotnet_api_tutorial.Services;
 public class ArticleService : IArticleService {
 
     private readonly AppDbContext _context;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IHttpContextService _httpContextService;
 
     public ArticleService(
         AppDbContext context,
-        IHttpContextAccessor httpContextAccessor
+        IHttpContextService httpContextService
     )
     {
         _context = context;
-        _httpContextAccessor = httpContextAccessor;
+        _httpContextService = httpContextService;
     }
 
     public async Task<(IEnumerable<Article> articles, int Count)> GetArticlesAsync(
@@ -48,9 +48,7 @@ public class ArticleService : IArticleService {
         }
         if(isFeed)
         {
-            var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier).Value;
-            int? currentUserId = string.IsNullOrEmpty(userIdString) ? null : int.Parse(userIdString);
-            
+            int? currentUserId = _httpContextService.GetCurrentUserId();
             if(currentUserId != null)
             {
                 articlesQuery = articlesQuery.Where(
@@ -83,16 +81,14 @@ public class ArticleService : IArticleService {
 
     public async Task<Article> CreateAsync(CreateArticleDto dto)
     {
-        var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier).Value;
-        int currentUserId = int.Parse(userIdString);
-
+        int? currentUserId = _httpContextService.GetCurrentUserId();
         Article article = new Article
         {
             Title = dto.Title,
             Description = dto.Description,
             Body = dto.Body,
-            Slug = dto.Title.Replace(' ', '-').ToLower(),  
-            AuthorId = currentUserId
+            Slug = Slugify(dto.Title), 
+            AuthorId = (int) currentUserId // Must be defined since the user must be logged in
         };
         
         // TODO: Extract this into a seperate tag service
@@ -117,8 +113,7 @@ public class ArticleService : IArticleService {
 
     public async Task<Article?> UpdateAsync(string slug, UpdateArticleDto dto)
     {
-        var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier).Value;
-        int currentUserId = int.Parse(userIdString);
+        int? currentUserId = _httpContextService.GetCurrentUserId();
 
         var article = await _context.Articles
             .Where(a => a.Slug == slug)
@@ -137,8 +132,7 @@ public class ArticleService : IArticleService {
         if(!string.IsNullOrWhiteSpace(dto.Title))
         {
             article.Title = dto.Title;
-            // TODO: create a private method to generate the slug in multiple places
-            article.Slug = dto.Title.Replace(' ', '-').ToLower();
+            article.Slug = Slugify(dto.Title);
         }
         if(!string.IsNullOrWhiteSpace(dto.Description))
         {
@@ -156,10 +150,9 @@ public class ArticleService : IArticleService {
 
     public async Task<bool> DeleteAsync(string slug)
     {
-        var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirstValue(ClaimTypes.NameIdentifier);
-        int currentUserId = int.Parse(userIdString!);
+        int? currentUserId = _httpContextService.GetCurrentUserId();
 
-            var article = await _context.Articles.FirstOrDefaultAsync(a => a.Slug == slug);
+        var article = await _context.Articles.FirstOrDefaultAsync(a => a.Slug == slug);
 
         if (article == null)
         {
@@ -175,5 +168,10 @@ public class ArticleService : IArticleService {
         await _context.SaveChangesAsync();
 
         return true;
+    }
+
+    private string Slugify(string text)
+    {
+        return text.Replace(' ', '-').ToLower();
     }
 }
