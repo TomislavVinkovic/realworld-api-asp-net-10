@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Json.Serialization;
 using dotnet_api_tutorial.Data;
 using dotnet_api_tutorial.Services;
 using dotnet_api_tutorial.Services.Interface;
@@ -27,9 +28,29 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidAudience = jwtSettings["Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(secretKey)
         };
+
+        // Add "Token token" support
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var authHeader = context.Request.Headers.Authorization.FirstOrDefault();
+
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Token "))
+                {
+                    context.Token = authHeader["Token ".Length..].Trim();
+                }
+
+                return Task.CompletedTask;
+            }
+        };
     });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
+        });
 
 // Add database support
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");

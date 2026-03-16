@@ -15,11 +15,17 @@ namespace dotnet_api_tutorial.Controllers;
 
     private readonly AppDbContext _context;
     private readonly IJwtService _jwtService;
+    private readonly IHttpContextService _httpContextService;
 
-    public UsersController(AppDbContext context, IJwtService jwtService)
+    public UsersController(
+        AppDbContext context,
+        IJwtService jwtService,
+        IHttpContextService httpContextService
+    )
     {
         _context = context;
         _jwtService = jwtService;
+        _httpContextService = httpContextService;
     }
 
     [HttpPost("login")]
@@ -77,14 +83,17 @@ namespace dotnet_api_tutorial.Controllers;
         var refreshToken = _jwtService.GenerateRefreshToken();
 
         return Ok(
-            new UserResponse(
-                user.Email,
-                accessToken,
-                refreshToken,
-                user.Username,
-                user.Bio,
-                user.Image
-            )
+            new 
+            {
+                user = new UserResponse(
+                    user.Email,
+                    accessToken,
+                    refreshToken,
+                    user.Username,
+                    user.Bio,
+                    user.Image
+                )
+            }
         );
     }
 
@@ -153,7 +162,7 @@ namespace dotnet_api_tutorial.Controllers;
     public async Task<ActionResult> UpdateUser(UpdateUserRequest request)
     {
         var userData = request.user;
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var userId = _httpContextService.GetCurrentUserId();
         var user = await _context.Users.FindAsync(userId);
         
         if (user == null) return NotFound();
@@ -188,15 +197,15 @@ namespace dotnet_api_tutorial.Controllers;
 
         var newAccessToken = _jwtService.GenerateAccessToken(user);
 
-        var userPayload = new 
-        {
-            email = user.Email,
-            token = newAccessToken,
-            refreshToken = user.RefreshToken,
-            username = user.Username,
-            bio = user.Bio,
-            image = user.Image
-        };
+        var userPayload = new UserResponse
+        (
+            Email: user.Email,
+            Token: newAccessToken,
+            RefreshToken: user.RefreshToken,
+            Username: user.Username,
+            Bio: user.Bio,
+            Image: user.Image
+        );
 
         return Ok(new { user = userPayload });
     }

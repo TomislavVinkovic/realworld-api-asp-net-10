@@ -1,12 +1,8 @@
-using System.Security.Claims;
 using dotnet_api_tutorial.Data;
 using dotnet_api_tutorial.DTOs;
 using dotnet_api_tutorial.Models;
 using dotnet_api_tutorial.Services.Interface;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using MyApp.Namespace;
 
 namespace dotnet_api_tutorial.Services;
 
@@ -25,11 +21,13 @@ public class ArticleService : IArticleService {
         _httpContextService = httpContextService;
     }
 
-    public async Task<(IEnumerable<Article> articles, int Count)> GetArticlesAsync(
+    public async Task<(IEnumerable<ArticleDto> articles, int Count)> GetArticlesAsync(
         ArticleQueryParameters query, 
         bool isFeed = false
     )
     {
+        int? currentUserId = _httpContextService.GetCurrentUserId();
+
         var articlesQuery = _context.Articles
             .Include(a => a.Author)
             .Include(a => a.TagList)
@@ -48,7 +46,6 @@ public class ArticleService : IArticleService {
         }
         if(isFeed)
         {
-            int? currentUserId = _httpContextService.GetCurrentUserId();
             if(currentUserId != null)
             {
                 articlesQuery = articlesQuery.Where(
@@ -64,34 +61,63 @@ public class ArticleService : IArticleService {
             .Skip(query.Offset)
             .Take(query.Limit)
             .ToListAsync();
+        
+        var returnArticles = articles.Select(
+            a =>
+            {
+                if(currentUserId == null)
+                {
+                    return new ArticleDto(a, false, false);
+                }                
+                bool favorited = a.FavoritedBy.FirstOrDefault(u => u.Id == currentUserId) != null;
+                bool following = a.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
+                
+                return new ArticleDto(a, favorited, following);
+            }
+        );
 
-        return new (articles, articleCount);
+        return new (returnArticles, articleCount);
     }
 
-    public async Task<Article?> GetArticleBySlugAsync(string slug)
+    public async Task<ArticleDto?> GetArticleBySlugAsync(string slug)
     {
+        var currentUserId = _httpContextService.GetCurrentUserId();
+
         var article = await _context.Articles
             .Include(a => a.Author)
             .Include(a => a.FavoritedBy)
             .FirstOrDefaultAsync(a => a.Slug == slug);
+        
+        if(article == null)
+        {
+            return null;
+        }
 
+        if(currentUserId != null)
+        {
+            bool following = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
+            bool favorited = article.FavoritedBy.FirstOrDefault(u => u.Id == currentUserId) != null;
 
-        return article;
+            return new ArticleDto(article, following, favorited);
+        }
+        return new ArticleDto(article, false, false);
     }
 
-    public async Task<Article> CreateAsync(CreateArticleDto dto)
+    public async Task<ArticleDto> CreateAsync(CreateArticleDto dto)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
+        
+        string slug = await SlugifyAsync(dto.Title);
+
         Article article = new Article
         {
             Title = dto.Title,
             Description = dto.Description,
             Body = dto.Body,
-            Slug = Slugify(dto.Title), 
-            AuthorId = (int) currentUserId // Must be defined since the user must be logged in
+            Slug = slug, 
+            AuthorId = (int) currentUserId
         };
         
-        // TODO: Extract this into a seperate tag service
         if(dto.TagList.Any())
         {
             var incomingTags = dto.TagList.Select(t => t.ToLower()).Distinct().ToList();
@@ -108,14 +134,17 @@ public class ArticleService : IArticleService {
 
         _context.Articles.Add(article);
         await _context.SaveChangesAsync();
-        return article;
+
+        return new ArticleDto(article, true, false);
     }
 
-    public async Task<Article?> UpdateAsync(string slug, UpdateArticleDto dto)
+    public async Task<ArticleDto?> UpdateAsync(string slug, UpdateArticleDto dto)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
 
         var article = await _context.Articles
+            .Include(a => a.Author)
+            .Include(a => a.FavoritedBy)
             .Where(a => a.Slug == slug)
             .FirstOrDefaultAsync();
         
@@ -132,7 +161,7 @@ public class ArticleService : IArticleService {
         if(!string.IsNullOrWhiteSpace(dto.Title))
         {
             article.Title = dto.Title;
-            article.Slug = Slugify(dto.Title);
+            article.Slug = await SlugifyAsync(dto.Title);
         }
         if(!string.IsNullOrWhiteSpace(dto.Description))
         {
@@ -145,7 +174,7 @@ public class ArticleService : IArticleService {
 
         await _context.SaveChangesAsync();
 
-        return article;
+        return new ArticleDto(article, true, false);
     }
 
     public async Task<bool> DeleteAsync(string slug)
@@ -170,8 +199,65 @@ public class ArticleService : IArticleService {
         return true;
     }
 
-    private string Slugify(string text)
+    private async Task<string> SlugifyAsync(string text)
     {
-        return text.Replace(' ', '-').ToLower();
+        string slug = text.Replace(' ', '-').ToLower();
+
+        bool slugExists = await _context.Articles.AnyAsync(a => a.Slug == slug);
+
+        if(slugExists)
+        {
+            var randomSuffix = Guid.NewGuid().ToString().Substring(0, 6);
+            slug = $"{slug}-{randomSuffix}";
+        }
+        return slug;
+    }
+
+    public async Task<ArticleDto?> FavoriteArticleAsync(string slug)
+    {
+        int? currentUserId = _httpContextService.GetCurrentUserId();
+        var article = await _context.Articles
+            .Include(a => a.Author)
+            .Include(a => a.TagList)
+            .Include(a => a.FavoritedBy)
+            .FirstOrDefaultAsync(a => a.Slug == slug);
+
+        if (article == null)
+        {
+            return null;
+        }
+
+        if(!article.FavoritedBy.Any(u => u.Id == currentUserId))
+        {
+            var user = await _context.Users.FindAsync(currentUserId);
+            article.FavoritedBy.Add(user!);
+            await _context.SaveChangesAsync();
+        }
+        bool isFollowing = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
+        return new ArticleDto(article, true, isFollowing);
+    }
+
+    public async Task<ArticleDto?> UnfavoriteArticleAsync(string slug)
+    {
+        int? currentUserId = _httpContextService.GetCurrentUserId();
+        var article = await _context.Articles
+            .Include(a => a.Author)
+            .Include(a => a.TagList)
+            .Include(a => a.FavoritedBy)
+            .FirstOrDefaultAsync(a => a.Slug == slug);
+
+        if (article == null)
+        {
+            return null;
+        }
+
+        if(!article.FavoritedBy.Any(u => u.Id == currentUserId))
+        {
+            var user = await _context.Users.FindAsync(currentUserId);
+            article.FavoritedBy.Remove(user!);
+            await _context.SaveChangesAsync();
+        }
+        bool isFollowing = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
+        return new ArticleDto(article, false, isFollowing);
     }
 }

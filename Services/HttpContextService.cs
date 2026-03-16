@@ -16,7 +16,11 @@ class HttpContextService : IHttpContextService
 
     public int? GetCurrentUserId()
     {
-        var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier).Value;
+        var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if(userIdString == null)
+        {
+            return null;
+        }
         int currentUserId = int.Parse(userIdString);
 
         return currentUserId;

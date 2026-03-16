@@ -1,11 +1,8 @@
 using dotnet_api_tutorial.Data;
 using dotnet_api_tutorial.DTOs;
-using dotnet_api_tutorial.Models;
 using dotnet_api_tutorial.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace MyApp.Namespace
 {
@@ -29,30 +26,18 @@ namespace MyApp.Namespace
         public async Task<ActionResult> List([FromQuery] ArticleQueryParameters query)
         {
             
-            var (articles, articleCount) = await _articleService.GetArticlesAsync(query);
+            var (articles, articlesCount) = await _articleService.GetArticlesAsync(query);
 
-            return Ok(
-                new
-                {
-                    articles,
-                    articleCount
-                }
-            );
+            return Ok(new ArticleListResponse(articles, articlesCount));
         }
 
         [Authorize]
         [HttpGet("feed")]
         public async Task<ActionResult> Feed([FromQuery] ArticleQueryParameters query)
         {
-            var (articles, articleCount) = await _articleService.GetArticlesAsync(query, isFeed: true);
+            var (articles, articlesCount) = await _articleService.GetArticlesAsync(query, isFeed: true);
 
-            return Ok(
-                new
-                {
-                    articles,
-                    articleCount
-                }
-            );
+            return Ok(new ArticleListResponse(articles, articlesCount));
         }
 
         [Authorize]
@@ -65,7 +50,7 @@ namespace MyApp.Namespace
                 return NotFound();
             }
 
-            return Ok(new {article});
+            return Ok(new ArticleResponse(article));
         }
 
         [Authorize]
@@ -75,18 +60,36 @@ namespace MyApp.Namespace
             try
             {
                 var article = await _articleService.CreateAsync(request.article);
-                return Ok(new {article});
+                return Ok(new ArticleResponse(article));
             }
             catch(UnauthorizedAccessException _)
             {
                 return Unauthorized();
             }
-            
         }
 
         [Authorize]
         [HttpPut("{slug}")]
         public async Task<ActionResult> UpdateArticle(string slug, UpdateArticleRequest request)
+        {
+            try
+            {
+                var article = await _articleService.UpdateAsync(slug, request.article);
+                if(article == null)
+                {
+                    return NotFound();
+                }
+                return Ok(new ArticleResponse(article));
+            }
+            catch(UnauthorizedAccessException _)
+            {
+                return Unauthorized();
+            }
+        }
+
+        [Authorize]
+        [HttpDelete("{slug}")]
+        public async Task<ActionResult> DeleteArticle(string slug)
         {
             try
             {
@@ -96,6 +99,44 @@ namespace MyApp.Namespace
                     return NotFound();
                 }
                 return Ok();
+            }
+            catch (UnauthorizedAccessException _)
+            {
+                return Unauthorized();
+            }
+        }
+
+        [Authorize]
+        [HttpPost("{slug}/favorite")]
+        public async Task<ActionResult> FavoriteArticle(string slug)
+        {
+            try
+            {
+                var article = await _articleService.FavoriteArticleAsync(slug);
+                if(article == null)
+                {
+                    return NotFound();
+                }
+                return Ok(new ArticleResponse(article));
+            }
+            catch (UnauthorizedAccessException _)
+            {
+                return Unauthorized();
+            }
+        }
+
+        [Authorize]
+        [HttpDelete("{slug}/unfavorite")]
+        public async Task<ActionResult> UnfavoriteArticle(string slug)
+        {
+            try
+            {
+                var article = await _articleService.UnfavoriteArticleAsync(slug);
+                if(article == null)
+                {
+                    return NotFound();
+                }
+                return Ok(new ArticleResponse(article));
             }
             catch (UnauthorizedAccessException _)
             {
