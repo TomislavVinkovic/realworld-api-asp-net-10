@@ -135,6 +135,8 @@ public class ArticleService : IArticleService {
         _context.Articles.Add(article);
         await _context.SaveChangesAsync();
 
+        await _context.Entry(article).Reference(a => a.Author).LoadAsync();
+
         return new ArticleDto(article, true, false);
     }
 

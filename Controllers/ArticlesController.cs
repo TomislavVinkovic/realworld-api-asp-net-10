@@ -4,21 +4,19 @@ using dotnet_api_tutorial.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MyApp.Namespace
+namespace dotnet_api_tutorial.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class ArticlesController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private IArticleService _articleService;
+        private readonly IArticleService _articleService;
 
-        public ArticlesController(
-            AppDbContext context,
+        public ArticlesController
+        (
             IArticleService articleService
         )
         {
-            _context = context;
             _articleService = articleService;
         }
 

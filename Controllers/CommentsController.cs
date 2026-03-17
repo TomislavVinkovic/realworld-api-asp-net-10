@@ -9,15 +9,13 @@ namespace dotnet_api_tutorial.Controllers
     [ApiController]
     public class CommentsController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private ICommentService _commentService;
+        private readonly ICommentService _commentService;
 
-        public CommentsController(
-            AppDbContext context,
+        public CommentsController
+        (
             ICommentService commentService
         )
         {
-            _context = context;
             _commentService = commentService;
         }
 

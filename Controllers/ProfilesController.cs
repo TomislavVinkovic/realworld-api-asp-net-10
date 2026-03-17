@@ -10,15 +10,13 @@ namespace dotnet_api_tutorial.Controllers
     [ApiController]
     public class ProfilesController : ControllerBase
     {
-        private readonly AppDbContext _context;
         private IProfileService _profileService;
 
-        public ProfilesController(
-            AppDbContext context,
+        public ProfilesController
+        (
             IProfileService profileService
         )
         {
-            _context = context;
             _profileService = profileService;
         }
         
