@@ -4,7 +4,7 @@ using dotnet_api_tutorial.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace MyApp.Namespace
+namespace dotnet_api_tutorial.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

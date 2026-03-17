@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using dotnet_api_tutorial.Data;
 
@@ -11,9 +12,11 @@ using dotnet_api_tutorial.Data;
 namespace dotnet_api_tutorial.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260316144439_Add comments table")]
+    partial class Addcommentstable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,39 +94,6 @@ namespace dotnet_api_tutorial.Migrations
                         .IsUnique();
 
                     b.ToTable("Articles");
-                });
-
-            modelBuilder.Entity("dotnet_api_tutorial.Models.Comment", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ArticleId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("AuthorId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Body")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ArticleId");
-
-                    b.HasIndex("AuthorId");
-
-                    b.ToTable("Comments");
                 });
 
             modelBuilder.Entity("dotnet_api_tutorial.Models.Tag", b =>
@@ -238,25 +208,6 @@ namespace dotnet_api_tutorial.Migrations
                     b.Navigation("Author");
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.Comment", b =>
-                {
-                    b.HasOne("dotnet_api_tutorial.Models.Article", "Article")
-                        .WithMany("Comments")
-                        .HasForeignKey("ArticleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("dotnet_api_tutorial.Models.User", "Author")
-                        .WithMany()
-                        .HasForeignKey("AuthorId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Article");
-
-                    b.Navigation("Author");
-                });
-
             modelBuilder.Entity("dotnet_api_tutorial.Models.Tag", b =>
                 {
                     b.HasOne("dotnet_api_tutorial.Models.Article", "Article")
@@ -270,8 +221,6 @@ namespace dotnet_api_tutorial.Migrations
 
             modelBuilder.Entity("dotnet_api_tutorial.Models.Article", b =>
                 {
-                    b.Navigation("Comments");
-
                     b.Navigation("TagList");
                 });
 

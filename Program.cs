@@ -62,6 +62,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IArticleService, ArticleService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IHttpContextService, HttpContextService>();
 
 // Learn more about configuring OpenAPI at 

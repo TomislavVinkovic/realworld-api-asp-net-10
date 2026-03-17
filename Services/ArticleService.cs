@@ -181,36 +181,24 @@ public class ArticleService : IArticleService {
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
 
-        var article = await _context.Articles.FirstOrDefaultAsync(a => a.Slug == slug);
-
-        if (article == null)
+        var authorId = await _context.Articles
+            .Where(a => a.Slug == slug)
+            .Select(a => (int?)a.AuthorId)
+            .FirstOrDefaultAsync();
+        if (authorId == null)
         {
             return false;
         }
-
-        if (article.AuthorId != currentUserId)
+        if (authorId != currentUserId)
         {
             throw new UnauthorizedAccessException("You do not have permission to delete this article.");
         }
 
-        _context.Articles.Remove(article);
-        await _context.SaveChangesAsync();
+        await _context.Articles
+            .Where(a => a.Slug == slug)
+            .ExecuteDeleteAsync();
 
         return true;
-    }
-
-    private async Task<string> SlugifyAsync(string text)
-    {
-        string slug = text.Replace(' ', '-').ToLower();
-
-        bool slugExists = await _context.Articles.AnyAsync(a => a.Slug == slug);
-
-        if(slugExists)
-        {
-            var randomSuffix = Guid.NewGuid().ToString().Substring(0, 6);
-            slug = $"{slug}-{randomSuffix}";
-        }
-        return slug;
     }
 
     public async Task<ArticleDto?> FavoriteArticleAsync(string slug)
@@ -259,5 +247,19 @@ public class ArticleService : IArticleService {
         }
         bool isFollowing = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
         return new ArticleDto(article, false, isFollowing);
+    }
+
+    private async Task<string> SlugifyAsync(string text)
+    {
+        string slug = text.Replace(' ', '-').ToLower();
+
+        bool slugExists = await _context.Articles.AnyAsync(a => a.Slug == slug);
+
+        if(slugExists)
+        {
+            var randomSuffix = Guid.NewGuid().ToString().Substring(0, 6);
+            slug = $"{slug}-{randomSuffix}";
+        }
+        return slug;
     }
 }

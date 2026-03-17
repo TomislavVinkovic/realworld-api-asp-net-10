@@ -40,7 +40,6 @@ namespace MyApp.Namespace
             return Ok(new ArticleListResponse(articles, articlesCount));
         }
 
-        [Authorize]
         [HttpGet("{slug}")]
         public async Task<ActionResult> GetArticle(string slug)
         {

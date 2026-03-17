@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Article> Articles { get; set; }
+    public DbSet<Comment> Comments { get; set; }
     public DbSet<Tag> Tags { get; set; }
 
     public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -47,6 +48,12 @@ public class AppDbContext : DbContext
             .HasMany(a => a.FavoritedBy)
             .WithMany(u => u.FavoritedArticles)
             .UsingEntity(j => j.ToTable("UserFavorites"));
+
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.Article)
+            .WithMany(a => a.Comments)
+            .HasForeignKey(c => c.ArticleId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<User>()
             .HasMany(u => u.Following)

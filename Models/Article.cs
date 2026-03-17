@@ -1,3 +1,5 @@
+using dotnet_api_tutorial.Services;
+
 namespace dotnet_api_tutorial.Models;
 
 public class Article : BaseEntity
@@ -13,4 +15,5 @@ public class Article : BaseEntity
     public User Author { get; set; }
     public ICollection<Tag> TagList { get; set; } = new List<Tag>();
     public ICollection<User> FavoritedBy { get; set; } = new List<User>();
+    public ICollection<Comment> Comments {get; set;} = new List<Comment>();
 }
