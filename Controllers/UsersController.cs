@@ -1,212 +1,88 @@
-using System.Security.Claims;
-using dotnet_api_tutorial.Data;
 using dotnet_api_tutorial.DTOs;
-using dotnet_api_tutorial.Models;
 using dotnet_api_tutorial.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace dotnet_api_tutorial.Controllers;
-    [Route("api/[controller]")]
-    [ApiController]
-    public class UsersController : ControllerBase
-    {
 
-    private readonly AppDbContext _context;
-    private readonly IJwtService _jwtService;
-    private readonly IHttpContextService _httpContextService;
+[Route("api/[controller]")]
+[ApiController]
+public class UsersController : ControllerBase
+{
+    private readonly IUserService _userService;
 
-    public UsersController(
-        AppDbContext context,
-        IJwtService jwtService,
-        IHttpContextService httpContextService
-    )
+    public UsersController(IUserService userService)
     {
-        _context = context;
-        _jwtService = jwtService;
-        _httpContextService = httpContextService;
+        _userService = userService;
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<UserResponse>> Login(LoginRequest request)
+    public async Task<ActionResult> Login(LoginRequest request)
     {
-        var userData = request.user;
-        var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == userData.Email);
+        var response = await _userService.LoginAsync(request.user);
+        
+        if (response == null) return Unauthorized("Invalid credentials.");
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(userData.Password, user.Password))
-            return Unauthorized("Invalid credentials.");
-
-        // Generate tokens
-        var accessToken = _jwtService.GenerateAccessToken(user);
-        var refreshToken = _jwtService.GenerateRefreshToken();
-
-        user.RefreshToken = refreshToken;
-        user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
-
-        await _context.SaveChangesAsync();
-
-        return Ok(
-            new
-            {
-                user = new UserResponse(
-                    user.Email,
-                    accessToken,
-                    refreshToken,
-                    user.Username,
-                    user.Bio,
-                    user.Image
-                )
-            }
-        );
+        return Ok(new { user = response });
     }
 
     [HttpPost("")]
-    public async Task<ActionResult<UserResponse>> Register(RegisterRequest request)
+    public async Task<ActionResult> Register(RegisterRequest request)
     {
-        var userData = request.user;
-
-        if (await _context.Users.AnyAsync(u => u.Email == userData.Email))
-            return BadRequest("Email already in use.");
-        
-        var user = new User
+        try
         {
-            Username = userData.Username,
-            Email = userData.Email,
-            Password = BCrypt.Net.BCrypt.HashPassword(userData.Password)
-        };
-
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-
-        var accessToken = _jwtService.GenerateAccessToken(user);
-        var refreshToken = _jwtService.GenerateRefreshToken();
-
-        return Ok(
-            new 
-            {
-                user = new UserResponse(
-                    user.Email,
-                    accessToken,
-                    refreshToken,
-                    user.Username,
-                    user.Bio,
-                    user.Image
-                )
-            }
-        );
+            var response = await _userService.RegisterAsync(request.user);
+            return Ok(new { user = response });
+        }
+        catch (ArgumentException ex)
+        {
+            // The service throws an ArgumentException with "email" if it's a duplicate.
+            // This formats the error exactly how the RealWorld spec wants it!
+            return BadRequest(new { errors = new Dictionary<string, string[]> { { ex.Message, new[] { "has already been taken" } } } });
+        }
     }
 
     [HttpPost("refresh")]
-    public async Task<ActionResult<UserResponse>> Refresh(TokenRequest request)
+    public async Task<ActionResult> Refresh(TokenRequest request)
     {
-        var principal = _jwtService.GetPrincipalFromExpiredToken(request.AccessToken);
-        var userId = int.Parse(principal.FindFirstValue(ClaimTypes.NameIdentifier)!);
+        var response = await _userService.RefreshAsync(request);
+        
+        if (response == null) return BadRequest("Invalid or expired refresh token. Please log in again.");
 
-        var user = await _context.Users.FindAsync(userId);
-        if (user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
-        {
-            return BadRequest("Invalid or expired refresh token. Please log in again.");
-        }
-
-        var newAccessToken = _jwtService.GenerateAccessToken(user);
-        var newRefreshToken = _jwtService.GenerateRefreshToken();
-
-        user.RefreshToken = newRefreshToken;
-        await _context.SaveChangesAsync();
-
-        return Ok(
-            new
-            {
-                user = new UserResponse(
-                    user.Email,
-                    newAccessToken,
-                    newRefreshToken,
-                    user.Username,
-                    user.Bio,
-                    user.Image
-                )
-            }
-        );
+        return Ok(new { user = response });
     }
 
     [Authorize]
     [HttpGet("")]
-    public async Task<ActionResult<UserResponse>> GetCurrentUser()
+    public async Task<ActionResult> GetCurrentUser()
     {
-        var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        var user = await _context.Users.FindAsync(userId);
-        
-        if (user == null) return NotFound();
-
+        // Extract the token directly from the header to hand it to the service
         var currentAccessToken = HttpContext.Request.Headers["Authorization"]
             .FirstOrDefault()?.Split(" ").Last() ?? "";
 
-        return Ok(
-            new {
-                user = 
-                    new UserResponse(
-                        Email: user.Email, 
-                        Token: currentAccessToken,
-                        RefreshToken: user.RefreshToken!, 
-                        Username: user.Username, 
-                        Bio: user.Bio, 
-                        Image: user.Image
-                    )
-            }
-        );
+        var response = await _userService.GetCurrentUserAsync(currentAccessToken);
+        
+        if (response == null) return NotFound();
+
+        return Ok(new { user = response });
     }
 
     [Authorize]
     [HttpPut("")]
     public async Task<ActionResult> UpdateUser(UpdateUserRequest request)
     {
-        var userData = request.user;
-        var userId = _httpContextService.GetCurrentUserId();
-        var user = await _context.Users.FindAsync(userId);
-        
-        if (user == null) return NotFound();
-
-        var dto = request;
-
-        if (!string.IsNullOrEmpty(userData.Email) && userData.Email != user.Email)
+        try
         {
-            if (await _context.Users.AnyAsync(u => u.Email == userData.Email))
-                return BadRequest(new { errors = new { email = new[] { "has already been taken" } } });
+            var response = await _userService.UpdateUserAsync(request.user);
             
-            user.Email = userData.Email;
-        }
+            if (response == null) return NotFound();
 
-        if (!string.IsNullOrEmpty(userData.Username) && userData.Username != user.Username)
+            return Ok(new { user = response });
+        }
+        catch (ArgumentException e)
         {
-            if (await _context.Users.AnyAsync(u => u.Username == userData.Username))
-                return BadRequest(new { errors = new { username = new[] { "has already been taken" } } });
-            
-            user.Username = userData.Username;
+            // Catching duplicates for both email and username dynamically!
+            return BadRequest(new { errors = new Dictionary<string, string[]> { { e.Message, new[] { "has already been taken" } } } });
         }
-
-        if (!string.IsNullOrEmpty(userData.Password))
-        {
-            user.Password = BCrypt.Net.BCrypt.HashPassword(userData.Password);
-        }
-
-        if (userData.Bio != null) user.Bio = userData.Bio;
-        if (userData.Image != null) user.Image = userData.Image;
-
-        await _context.SaveChangesAsync();
-
-        var newAccessToken = _jwtService.GenerateAccessToken(user);
-
-        var userPayload = new UserResponse
-        (
-            Email: user.Email,
-            Token: newAccessToken,
-            RefreshToken: user.RefreshToken,
-            Username: user.Username,
-            Bio: user.Bio,
-            Image: user.Image
-        );
-
-        return Ok(new { user = userPayload });
     }
 }
