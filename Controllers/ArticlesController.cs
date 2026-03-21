@@ -23,9 +23,7 @@ namespace dotnet_api_tutorial.Controllers
         [HttpGet("")]
         public async Task<ActionResult> List([FromQuery] ArticleQueryParameters query)
         {
-            
             var (articles, articlesCount) = await _articleService.GetArticlesAsync(query);
-
             return Ok(new ArticleListResponse(articles, articlesCount));
         }
 
@@ -34,7 +32,6 @@ namespace dotnet_api_tutorial.Controllers
         public async Task<ActionResult> Feed([FromQuery] ArticleQueryParameters query)
         {
             var (articles, articlesCount) = await _articleService.GetArticlesAsync(query, isFeed: true);
-
             return Ok(new ArticleListResponse(articles, articlesCount));
         }
 

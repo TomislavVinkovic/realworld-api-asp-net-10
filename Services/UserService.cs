@@ -39,10 +39,7 @@ public class UserService : IUserService
     }
 
     public async Task<UserResponse> RegisterAsync(RegisterDto dto)
-    {
-        if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-            throw new ArgumentException("email"); // Controller will catch this and format the error
-        
+    {   
         var user = new User
         {
             Username = dto.Username,

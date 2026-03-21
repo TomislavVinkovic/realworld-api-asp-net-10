@@ -1,5 +1,6 @@
 using dotnet_api_tutorial.DTOs;
 using dotnet_api_tutorial.Services.Interface;
+using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -29,17 +30,8 @@ public class UsersController : ControllerBase
     [HttpPost("")]
     public async Task<ActionResult> Register(RegisterRequest request)
     {
-        try
-        {
-            var response = await _userService.RegisterAsync(request.user);
-            return Ok(new { user = response });
-        }
-        catch (ArgumentException ex)
-        {
-            // The service throws an ArgumentException with "email" if it's a duplicate.
-            // This formats the error exactly how the RealWorld spec wants it!
-            return BadRequest(new { errors = new Dictionary<string, string[]> { { ex.Message, new[] { "has already been taken" } } } });
-        }
+        var response = await _userService.RegisterAsync(request.user);
+        return Ok(new { user = response });
     }
 
     [HttpPost("refresh")]

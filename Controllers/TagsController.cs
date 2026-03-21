@@ -1,6 +1,4 @@
-using dotnet_api_tutorial.Models;
 using dotnet_api_tutorial.Services.Interface;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dotnet_api_tutorial.Controllers

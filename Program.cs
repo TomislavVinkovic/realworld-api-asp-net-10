@@ -6,6 +6,8 @@ using dotnet_api_tutorial.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using FluentValidation;
+using dotnet_api_tutorial.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,11 +48,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-        {
+builder.Services.AddControllers(options =>
+{
+    options.Filters.Add<AutoValidationFilter>();
+}).AddJsonOptions(options =>
+    {
             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
-        });
+    });
 
 // Add database support
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -66,6 +70,8 @@ builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<ITagService, TagService>();
 builder.Services.AddScoped<IHttpContextService, HttpContextService>();
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 // Learn more about configuring OpenAPI at 
 builder.Services.AddOpenApi();
