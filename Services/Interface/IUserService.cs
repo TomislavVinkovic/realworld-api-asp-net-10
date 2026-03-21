@@ -1,4 +1,5 @@
 using dotnet_api_tutorial.DTOs;
+using dotnet_api_tutorial.Models;
 
 namespace dotnet_api_tutorial.Services.Interface;
 

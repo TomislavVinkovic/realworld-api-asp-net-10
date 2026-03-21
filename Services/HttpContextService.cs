@@ -14,6 +14,14 @@ class HttpContextService : IHttpContextService
         _httpContextAccessor = httpContextAccessor;
     }
 
+    public string GetBaseUrl()
+    {
+        var request = _httpContextAccessor.HttpContext!.Request;
+        var baseUrl = $"{request.Scheme}://{request.Host}";
+
+        return baseUrl;
+    }
+
     public int? GetCurrentUserId()
     {
         var userIdString = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;

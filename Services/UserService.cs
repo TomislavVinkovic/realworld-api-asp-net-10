@@ -35,7 +35,15 @@ public class UserService : IUserService
 
         await _context.SaveChangesAsync();
 
-        return new UserResponse(user.Email, accessToken, refreshToken, user.Username, user.Bio, user.Image);
+        var fullImageUrl = GetFullImageUrl(user);
+        return new UserResponse(
+            user.Email, 
+            accessToken, 
+            refreshToken, 
+            user.Username, 
+            user.Bio, 
+            fullImageUrl
+        );
     }
 
     public async Task<UserResponse> RegisterAsync(RegisterDto dto)
@@ -53,7 +61,15 @@ public class UserService : IUserService
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = _jwtService.GenerateRefreshToken();
 
-        return new UserResponse(user.Email, accessToken, refreshToken, user.Username, user.Bio, user.Image);
+        var fullImageUrl = GetFullImageUrl(user);
+        return new UserResponse(
+            user.Email, 
+            accessToken, 
+            refreshToken, 
+            user.Username, 
+            user.Bio, 
+            fullImageUrl
+        );
     }
 
     public async Task<UserResponse?> RefreshAsync(TokenRequest request)
@@ -75,7 +91,15 @@ public class UserService : IUserService
         user.RefreshToken = newRefreshToken;
         await _context.SaveChangesAsync();
 
-        return new UserResponse(user.Email, newAccessToken, newRefreshToken, user.Username, user.Bio, user.Image);
+        var fullImageUrl = GetFullImageUrl(user);
+        return new UserResponse(
+            user.Email, 
+            newAccessToken, 
+            newRefreshToken, 
+            user.Username, 
+            user.Bio, 
+            fullImageUrl
+        );
     }
 
     public async Task<UserResponse?> GetCurrentUserAsync(string currentToken)
@@ -86,7 +110,15 @@ public class UserService : IUserService
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return null;
 
-        return new UserResponse(user.Email, currentToken, user.RefreshToken!, user.Username, user.Bio, user.Image);
+        var fullImageUrl = GetFullImageUrl(user);
+        return new UserResponse(
+            user.Email, 
+            currentToken, 
+            user.RefreshToken!, 
+            user.Username, 
+            user.Bio, 
+            fullImageUrl
+        );
     }
 
     public async Task<UserResponse?> UpdateUserAsync(UpdateUserDto dto)
@@ -124,6 +156,26 @@ public class UserService : IUserService
 
         var newAccessToken = _jwtService.GenerateAccessToken(user);
 
-        return new UserResponse(user.Email, newAccessToken, user.RefreshToken, user.Username, user.Bio, user.Image);
+        var fullImageUrl = GetFullImageUrl(user);
+        return new UserResponse(
+            user.Email, 
+            newAccessToken, 
+            user.RefreshToken, 
+            user.Username, 
+            user.Bio, 
+            GetFullImageUrl(user)
+        );
+    }
+
+    private string? GetFullImageUrl(User user)
+    {
+        var baseUrl = _httpContextService.GetBaseUrl();
+        var fullImageUrl = user.Image;
+        if (!string.IsNullOrEmpty(user.Image) && user.Image.StartsWith("/"))
+        {
+            fullImageUrl = $"{baseUrl}{user.Image}";
+        }
+
+        return fullImageUrl;
     }
 }

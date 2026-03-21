@@ -11,10 +11,15 @@ namespace dotnet_api_tutorial.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IFileService _fileService;
 
-    public UsersController(IUserService userService)
+    public UsersController(
+        IUserService userService,
+        IFileService fileService
+    )
     {
         _userService = userService;
+        _fileService = fileService;
     }
 
     [HttpPost("login")]
@@ -61,14 +66,38 @@ public class UsersController : ControllerBase
 
     [Authorize]
     [HttpPut("")]
-    public async Task<ActionResult> UpdateUser(UpdateUserRequest request)
+    public async Task<ActionResult> UpdateUser ([FromForm] UpdateUserRequest request)
     {
+        string? relativeImagePath = null;
+
+        if (request.user.Image != null && request.user.Image.Length > 0)
+        {
+            try
+            {
+                relativeImagePath = await _fileService.UploadImageAsync(request.user.Image);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { errors = new { image = new[] { ex.Message } } });
+            }
+        }
+
+        var updateDto = new UpdateUserDto
+        {
+            Email = request.user.Email,
+            Username = request.user.Username,
+            Password = request.user.Password,
+            Bio = request.user.Bio,
+            Image = relativeImagePath // Pass the relative path (or null if no upload)
+        };
+
         try
         {
-            var response = await _userService.UpdateUserAsync(request.user);
-            
-            if (response == null) return NotFound();
-
+            var response = await _userService.UpdateUserAsync(updateDto);
+            if (response == null)
+            {
+                return NotFound();   
+            }
             return Ok(new { user = response });
         }
         catch (ArgumentException e)
