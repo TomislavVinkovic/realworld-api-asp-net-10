@@ -1,3 +1,5 @@
+using dotnet_api_tutorial.Models;
+
 namespace dotnet_api_tutorial.DTOs;
 
 public record RegisterDto(string Username, string Email, string Password);
@@ -25,7 +27,18 @@ public class UpdateUserFormDto
     // IFormFile catches the physical file from the multipart/form-data request
     public IFormFile? Image { get; set; } 
 }
-public record UpdateUserRequest(UpdateUserFormDto user);
-
+public class UpdateUserRequest
+{
+    public UpdateUserFormDto user { get; set; } = new UpdateUserFormDto(); 
+}
 // What we send back to the user (notice we include the JWT token here)
 public record UserResponse(string Email, string Token, string RefreshToken, string Username, string? Bio, string? Image);
+public record EditUserDto
+{
+    public string? Email { get; init; }
+    public string? Username { get; init; }
+    public string? Bio { get; init; }
+    public string? Image { get; init; }
+
+}
+public record EditUserResponse(EditUserDto user);

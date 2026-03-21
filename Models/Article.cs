@@ -1,7 +1,8 @@
-using dotnet_api_tutorial.Services;
+using Microsoft.EntityFrameworkCore;
 
 namespace dotnet_api_tutorial.Models;
 
+[Index(nameof(Slug), IsUnique = true)]
 public class Article : BaseEntity
 {
     public int Id { get; set; }

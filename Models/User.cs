@@ -1,5 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+
 namespace dotnet_api_tutorial.Models;
 
+[Index(nameof(Username), IsUnique = true)]
+[Index(nameof(Email), IsUnique = true)]
 public class User : BaseEntity
 {
     public int Id { get; set; }

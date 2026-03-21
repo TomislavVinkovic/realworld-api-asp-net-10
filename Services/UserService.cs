@@ -11,12 +11,19 @@ public class UserService : IUserService
 {
     private readonly AppDbContext _context;
     private readonly IJwtService _jwtService;
+    private readonly IFileService _fileService;
     private readonly IHttpContextService _httpContextService;
 
-    public UserService(AppDbContext context, IJwtService jwtService, IHttpContextService httpContextService)
+    public UserService(
+        AppDbContext context, 
+        IJwtService jwtService,
+        IFileService fileService,
+        IHttpContextService httpContextService
+    )
     {
         _context = context;
         _jwtService = jwtService;
+        _fileService = fileService;
         _httpContextService = httpContextService;
     }
 
@@ -35,7 +42,7 @@ public class UserService : IUserService
 
         await _context.SaveChangesAsync();
 
-        var fullImageUrl = GetFullImageUrl(user);
+        var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
         return new UserResponse(
             user.Email, 
             accessToken, 
@@ -61,7 +68,8 @@ public class UserService : IUserService
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = _jwtService.GenerateRefreshToken();
 
-        var fullImageUrl = GetFullImageUrl(user);
+        var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
+
         return new UserResponse(
             user.Email, 
             accessToken, 
@@ -70,6 +78,23 @@ public class UserService : IUserService
             user.Bio, 
             fullImageUrl
         );
+    }
+
+    public async Task<bool> LogoutAsync()
+    {
+        var userId = _httpContextService.GetCurrentUserId();
+        if (userId == null) return false;
+
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) return false;
+
+        // 3. SECURE LOGOUT: Wipe the refresh token so it can never be used again
+        user.RefreshToken = null;
+        user.RefreshTokenExpiryTime = null;
+
+        await _context.SaveChangesAsync();
+
+        return true;
     }
 
     public async Task<UserResponse?> RefreshAsync(TokenRequest request)
@@ -91,7 +116,7 @@ public class UserService : IUserService
         user.RefreshToken = newRefreshToken;
         await _context.SaveChangesAsync();
 
-        var fullImageUrl = GetFullImageUrl(user);
+        var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
         return new UserResponse(
             user.Email, 
             newAccessToken, 
@@ -110,7 +135,7 @@ public class UserService : IUserService
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return null;
 
-        var fullImageUrl = GetFullImageUrl(user);
+        var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
         return new UserResponse(
             user.Email, 
             currentToken, 
@@ -156,26 +181,14 @@ public class UserService : IUserService
 
         var newAccessToken = _jwtService.GenerateAccessToken(user);
 
-        var fullImageUrl = GetFullImageUrl(user);
+        var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
         return new UserResponse(
             user.Email, 
             newAccessToken, 
             user.RefreshToken, 
             user.Username, 
             user.Bio, 
-            GetFullImageUrl(user)
+            fullImageUrl
         );
-    }
-
-    private string? GetFullImageUrl(User user)
-    {
-        var baseUrl = _httpContextService.GetBaseUrl();
-        var fullImageUrl = user.Image;
-        if (!string.IsNullOrEmpty(user.Image) && user.Image.StartsWith("/"))
-        {
-            fullImageUrl = $"{baseUrl}{user.Image}";
-        }
-
-        return fullImageUrl;
     }
 }

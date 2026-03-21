@@ -1,12 +1,11 @@
 using dotnet_api_tutorial.DTOs;
 using dotnet_api_tutorial.Services.Interface;
-using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace dotnet_api_tutorial.Controllers;
 
-[Route("api/[controller]")]
+[Route("api/user")]
 [ApiController]
 public class UsersController : ControllerBase
 {
@@ -26,10 +25,23 @@ public class UsersController : ControllerBase
     public async Task<ActionResult> Login(LoginRequest request)
     {
         var response = await _userService.LoginAsync(request.user);
-        
         if (response == null) return Unauthorized("Invalid credentials.");
 
         return Ok(new { user = response });
+    }
+
+    [Authorize]
+    [HttpGet("logout")]
+    public async Task<ActionResult> Logout()
+    {
+        var success = await _userService.LogoutAsync();
+
+        if (!success)
+        {
+            return Unauthorized(); 
+        }
+
+        return NoContent();
     }
 
     [HttpPost("")]
@@ -43,9 +55,10 @@ public class UsersController : ControllerBase
     public async Task<ActionResult> Refresh(TokenRequest request)
     {
         var response = await _userService.RefreshAsync(request);
-        
-        if (response == null) return BadRequest("Invalid or expired refresh token. Please log in again.");
-
+        if (response == null)
+        {
+            return BadRequest("Invalid or expired refresh token. Please log in again.");
+        }
         return Ok(new { user = response });
     }
 
@@ -58,10 +71,28 @@ public class UsersController : ControllerBase
             .FirstOrDefault()?.Split(" ").Last() ?? "";
 
         var response = await _userService.GetCurrentUserAsync(currentAccessToken);
-        
         if (response == null) return NotFound();
-
         return Ok(new { user = response });
+    }
+
+    [Authorize]
+    [HttpGet("edit")]
+    public async Task<ActionResult> EditUser()
+    {
+        var currentAccessToken = HttpContext.Request.Headers["Authorization"]
+            .FirstOrDefault()?.Split(" ").Last() ?? "";
+
+        var user = await _userService.GetCurrentUserAsync(currentAccessToken);
+        if (user == null) return NotFound();
+
+        var userDto = new EditUserDto
+        {
+            Email = user.Email,
+            Bio = user.Bio,
+            Image = user.Image,
+            Username = user.Username
+        };
+        return Ok(new EditUserResponse(userDto));
     }
 
     [Authorize]

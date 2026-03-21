@@ -11,14 +11,17 @@ public class ArticleService : IArticleService {
 
     private readonly AppDbContext _context;
     private readonly IHttpContextService _httpContextService;
+    private readonly IFileService _fileService;
 
     public ArticleService(
         AppDbContext context,
-        IHttpContextService httpContextService
+        IHttpContextService httpContextService,
+        IFileService fileService
     )
     {
         _context = context;
         _httpContextService = httpContextService;
+        _fileService = fileService;
     }
 
     public async Task<(IEnumerable<ArticleDto> articles, int Count)> GetArticlesAsync(
@@ -30,7 +33,9 @@ public class ArticleService : IArticleService {
 
         var articlesQuery = _context.Articles
             .Include(a => a.Author)
+                .ThenInclude(a => a.Followers)
             .Include(a => a.TagList)
+            .Include(a => a.FavoritedBy)
             .AsQueryable();
 
         if(!string.IsNullOrEmpty(query.Author)) {
@@ -61,18 +66,19 @@ public class ArticleService : IArticleService {
             .Skip(query.Offset)
             .Take(query.Limit)
             .ToListAsync();
-        
+
         var returnArticles = articles.Select(
             a =>
             {
-                if(currentUserId == null)
+                bool isFavorited = false;
+                bool isFollowing = false;
+                if(currentUserId != null)
                 {
-                    return new ArticleDto(a, false, false);
+                    isFavorited = a.FavoritedBy.FirstOrDefault(u => u.Id == currentUserId) != null;
+                    isFollowing = a.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
                 }                
-                bool favorited = a.FavoritedBy.FirstOrDefault(u => u.Id == currentUserId) != null;
-                bool following = a.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
                 
-                return new ArticleDto(a, favorited, following);
+                return ArticleDtoFactory(a, isFavorited, isFollowing);
             }
         );
 
@@ -86,6 +92,7 @@ public class ArticleService : IArticleService {
         var article = await _context.Articles
             .Include(a => a.Author)
             .Include(a => a.FavoritedBy)
+            .AsNoTracking()
             .FirstOrDefaultAsync(a => a.Slug == slug);
         
         if(article == null)
@@ -93,19 +100,21 @@ public class ArticleService : IArticleService {
             return null;
         }
 
+        bool isFavorited = false;
+        bool isFollowing = false;
         if(currentUserId != null)
         {
-            bool following = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
-            bool favorited = article.FavoritedBy.FirstOrDefault(u => u.Id == currentUserId) != null;
-
-            return new ArticleDto(article, following, favorited);
+            isFollowing = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
+            isFavorited = article.FavoritedBy.FirstOrDefault(u => u.Id == currentUserId) != null;
         }
-        return new ArticleDto(article, false, false);
+
+        return ArticleDtoFactory(article, isFavorited, isFollowing);
     }
 
     public async Task<ArticleDto> CreateAsync(CreateArticleDto dto)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
+        var currentUser = _context.Users.Find(currentUserId);
         
         string slug = await SlugifyAsync(dto.Title);
 
@@ -132,12 +141,15 @@ public class ArticleService : IArticleService {
             article.TagList = existingTags.Concat(newTags).ToList();
         }
 
+        // The user automatically favorites their own article
+        article.FavoritedBy.Add(currentUser!);
+
         _context.Articles.Add(article);
         await _context.SaveChangesAsync();
 
         await _context.Entry(article).Reference(a => a.Author).LoadAsync();
 
-        return new ArticleDto(article, true, false);
+        return ArticleDtoFactory(article, true, false);
     }
 
     public async Task<ArticleDto?> UpdateAsync(string slug, UpdateArticleDto dto)
@@ -176,7 +188,8 @@ public class ArticleService : IArticleService {
 
         await _context.SaveChangesAsync();
 
-        return new ArticleDto(article, true, false);
+        bool isFavorited = article.FavoritedBy.FirstOrDefault(u => u.Id == currentUserId) != null;
+        return ArticleDtoFactory(article, isFavorited, false);
     }
 
     public async Task<bool> DeleteAsync(string slug)
@@ -224,7 +237,7 @@ public class ArticleService : IArticleService {
             await _context.SaveChangesAsync();
         }
         bool isFollowing = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
-        return new ArticleDto(article, true, isFollowing);
+        return ArticleDtoFactory(article, true, isFollowing);
     }
 
     public async Task<ArticleDto?> UnfavoriteArticleAsync(string slug)
@@ -241,14 +254,25 @@ public class ArticleService : IArticleService {
             return null;
         }
 
-        if(!article.FavoritedBy.Any(u => u.Id == currentUserId))
+        if(article.FavoritedBy.Any(u => u.Id == currentUserId))
         {
             var user = await _context.Users.FindAsync(currentUserId);
             article.FavoritedBy.Remove(user!);
             await _context.SaveChangesAsync();
         }
         bool isFollowing = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
-        return new ArticleDto(article, false, isFollowing);
+        return ArticleDtoFactory(article, false, isFollowing);
+    }
+
+    private ArticleDto ArticleDtoFactory(Article article, bool isFavorited, bool isFollowing)
+    {
+        var a = new ArticleDto(article, isFavorited, isFollowing);
+        
+        // Manufacture the profile image URL
+        var absoluteFileUrl = _fileService.GetAbsoluteFileUrl(article.Author.Image);
+        a.Author.Image = absoluteFileUrl;
+
+        return a;
     }
 
     private async Task<string> SlugifyAsync(string text)

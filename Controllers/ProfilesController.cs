@@ -20,7 +20,6 @@ namespace dotnet_api_tutorial.Controllers
             _profileService = profileService;
         }
         
-        [Authorize]
         [HttpGet("{username}")]
         public async Task<ActionResult<ProfileResponse>> GetProfile(string username)
         {
@@ -36,7 +35,7 @@ namespace dotnet_api_tutorial.Controllers
         }
 
         [Authorize]
-        [HttpPost("{username}")]
+        [HttpPost("{username}/follow")]
         public async Task<ActionResult<ProfileResponse>> Follow(string username)
         {
             var profile = await _profileService.FollowUserAsync(username);
@@ -51,7 +50,7 @@ namespace dotnet_api_tutorial.Controllers
         }
 
         [Authorize]
-        [HttpDelete("{username}")]
+        [HttpDelete("{username}/unfollow")]
         public async Task<ActionResult<ProfileResponse>> Unfollow(string username)
         {
             var profile = await _profileService.UnfollowUserAsync(username);

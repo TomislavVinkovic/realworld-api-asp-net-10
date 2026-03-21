@@ -21,6 +21,9 @@
 !.vscode/extensions.json
 .history/*
 
+# Uploads
+wwwroot/uploads/*
+
 
 #System Files
 .DS_Store

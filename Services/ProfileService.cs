@@ -1,5 +1,6 @@
 using dotnet_api_tutorial.Data;
 using dotnet_api_tutorial.DTOs;
+using dotnet_api_tutorial.Models;
 using dotnet_api_tutorial.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,24 +10,22 @@ public class ProfileService : IProfileService
 {
     private readonly AppDbContext _context;
     private readonly IHttpContextService _httpContextService;
+    private readonly IFileService _fileService;
 
     public ProfileService(
         AppDbContext context,
-        IHttpContextService httpContextService
+        IHttpContextService httpContextService,
+        IFileService fileService
     )
     {
         _context = context;
         _httpContextService = httpContextService;
+        _fileService = fileService;
     }
 
     public async Task<ProfileDto?> GetProfileByUsernameAsync(string username)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
-        if(currentUserId == null)
-        {
-            return null;
-        }
-        var currentUser = await _context.Users.FindAsync(currentUserId);
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         if(user == null)
@@ -34,13 +33,22 @@ public class ProfileService : IProfileService
             return null;
         }
 
-        bool isFollowingUser = currentUser.Following.Any(u => u.Username == user.Username);
+        bool isFollowingUser = false;
+        if(currentUserId != null)
+        {
+            var currentUser = await _context.Users
+                .Include(u => u.Following)
+                .FirstOrDefaultAsync(u => u.Id == currentUserId);
+            isFollowingUser = currentUser!.Following.Any(u => u.Username == user.Username);
+        }
+        
+        var profileImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
         return new ProfileDto
         (
-            user.Username,
-            user.Bio,
-            user.Image,
-            isFollowingUser
+            Username: user.Username,
+            Bio: user.Bio,
+            Image: profileImageUrl,
+            Following: isFollowingUser
         );
     }
 
@@ -52,7 +60,10 @@ public class ProfileService : IProfileService
             return null;
         }
 
-        var currentUser = await _context.Users.FindAsync(currentUserId);
+        var currentUser = await _context.Users
+            .Include(u => u.Following)
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
+
         var userToFollow = await _context.Users
             .Where(u => u.Username == username)
             .FirstOrDefaultAsync();
@@ -85,7 +96,9 @@ public class ProfileService : IProfileService
             return null;
         }
 
-        var currentUser = await _context.Users.FindAsync(currentUserId);
+        var currentUser = await _context.Users
+            .Include(u => u.Following)
+            .FirstOrDefaultAsync(u => u.Id == currentUserId);
         var userToFollow = await _context.Users
             .Where(u => u.Username == username)
             .FirstOrDefaultAsync();
