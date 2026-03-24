@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using dotnet_api_tutorial.Data;
+using RealWorld.Data;
 
 #nullable disable
 
-namespace dotnet_api_tutorial.Migrations
+namespace RealWorld.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260313071713_UsersCreate")]
@@ -24,7 +24,7 @@ namespace dotnet_api_tutorial.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.User", b =>
+            modelBuilder.Entity("RealWorld.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

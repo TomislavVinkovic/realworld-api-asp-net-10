@@ -1,9 +1,9 @@
 using FluentValidation;
-using dotnet_api_tutorial.Data;
-using dotnet_api_tutorial.DTOs;
+using RealWorld.Data;
+using RealWorld.DTOs;
 using Microsoft.EntityFrameworkCore;
 
-namespace dotnet_api_tutorial.Validators;
+namespace RealWorld.Validators;
 
 public class RegisterValidator : AbstractValidator<RegisterRequest>
 {

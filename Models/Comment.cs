@@ -1,4 +1,4 @@
-namespace dotnet_api_tutorial.Models;
+namespace RealWorld.Models;
 
 public class Comment : BaseEntity
 {

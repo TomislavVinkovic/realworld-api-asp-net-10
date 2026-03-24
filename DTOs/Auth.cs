@@ -1,6 +1,6 @@
-using dotnet_api_tutorial.Models;
+using RealWorld.Models;
 
-namespace dotnet_api_tutorial.DTOs;
+namespace RealWorld.DTOs;
 
 public record RegisterDto(string Username, string Email, string Password);
 public record RegisterRequest(RegisterDto user);

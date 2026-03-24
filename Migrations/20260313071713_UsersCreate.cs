@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace dotnet_api_tutorial.Migrations
+namespace RealWorld.Migrations
 {
     /// <inheritdoc />
     public partial class UsersCreate : Migration

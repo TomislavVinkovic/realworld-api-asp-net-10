@@ -4,7 +4,7 @@
     <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>dotnet_api_tutorial</RootNamespace>
+    <RootNamespace>RealWorld</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

@@ -1,7 +1,7 @@
-using dotnet_api_tutorial.Services.Interface;
+using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
 
-namespace dotnet_api_tutorial.Controllers
+namespace RealWorld.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

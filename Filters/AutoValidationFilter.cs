@@ -2,7 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace dotnet_api_tutorial.Filters;
+namespace RealWorld.Filters;
 
 public class AutoValidationFilter : IAsyncActionFilter
 {

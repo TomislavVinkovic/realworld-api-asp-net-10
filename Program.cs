@@ -1,13 +1,13 @@
 using System.Text;
 using System.Text.Json.Serialization;
-using dotnet_api_tutorial.Data;
-using dotnet_api_tutorial.Services;
-using dotnet_api_tutorial.Services.Interface;
+using RealWorld.Data;
+using RealWorld.Services;
+using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using FluentValidation;
-using dotnet_api_tutorial.Filters;
+using RealWorld.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 

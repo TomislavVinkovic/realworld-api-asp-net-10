@@ -1,5 +1,5 @@
-using dotnet_api_tutorial.DTOs;
-using dotnet_api_tutorial.Models;
+using RealWorld.DTOs;
+using RealWorld.Models;
 
 public class CommentDto
 {

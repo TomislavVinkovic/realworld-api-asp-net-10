@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace dotnet_api_tutorial.Models;
+namespace RealWorld.Models;
 
 [Index(nameof(Slug), IsUnique = true)]
 public class Article : BaseEntity

@@ -2,11 +2,11 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
-using dotnet_api_tutorial.Models;
-using dotnet_api_tutorial.Services.Interface;
+using RealWorld.Models;
+using RealWorld.Services.Interface;
 using Microsoft.IdentityModel.Tokens;
 
-namespace dotnet_api_tutorial.Services;
+namespace RealWorld.Services;
 
 class JwtService : IJwtService
 {

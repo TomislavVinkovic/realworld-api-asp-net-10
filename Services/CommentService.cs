@@ -1,9 +1,9 @@
-using dotnet_api_tutorial.Data;
-using dotnet_api_tutorial.Models;
-using dotnet_api_tutorial.Services.Interface;
+using RealWorld.Data;
+using RealWorld.Models;
+using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 
-namespace dotnet_api_tutorial.Services;
+namespace RealWorld.Services;
 
 public class CommentService : ICommentService
 {

@@ -1,7 +1,7 @@
-﻿using dotnet_api_tutorial.Models;
+﻿using RealWorld.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace dotnet_api_tutorial.Data;
+namespace RealWorld.Data;
 
 public class AppDbContext : DbContext
 {

@@ -1,7 +1,7 @@
-using dotnet_api_tutorial.DTOs;
-using dotnet_api_tutorial.Models;
+using RealWorld.DTOs;
+using RealWorld.Models;
 
-namespace dotnet_api_tutorial.Services.Interface;
+namespace RealWorld.Services.Interface;
 
 public interface IArticleService {
     public Task<(IEnumerable<ArticleDto> articles, int Count)> GetArticlesAsync(

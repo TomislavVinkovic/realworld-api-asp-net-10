@@ -1,3 +1,3 @@
-using dotnet_api_tutorial.DTOs;
+using RealWorld.DTOs;
 
 public record TagListResponse(List<string> tags);

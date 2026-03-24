@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using dotnet_api_tutorial.Services.Interface;
+using RealWorld.Services.Interface;
 
-namespace dotnet_api_tutorial.Services;
+namespace RealWorld.Services;
 
 class HttpContextService : IHttpContextService
 {

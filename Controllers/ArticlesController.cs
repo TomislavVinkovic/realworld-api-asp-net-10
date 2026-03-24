@@ -1,10 +1,10 @@
-using dotnet_api_tutorial.Data;
-using dotnet_api_tutorial.DTOs;
-using dotnet_api_tutorial.Services.Interface;
+using RealWorld.Data;
+using RealWorld.DTOs;
+using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace dotnet_api_tutorial.Controllers
+namespace RealWorld.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

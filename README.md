@@ -66,7 +66,7 @@ The API is mounted at `/api` and implements the RealWorld spec, along with sever
 ├── wwwroot/uploads/           # Local storage directory for user-uploaded profile images
 ├── appsettings.json           # Environment configuration (DB connections, JWT secrets)
 ├── Program.cs                 # Application entry point, DI container, and middleware pipeline
-└── dotnet_api_tutorial.csproj # C# project dependencies and build configuration
+└── RealWorld.csproj # C# project dependencies and build configuration
 ```
 
 ---

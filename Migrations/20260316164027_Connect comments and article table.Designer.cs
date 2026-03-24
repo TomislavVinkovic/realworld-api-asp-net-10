@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using dotnet_api_tutorial.Data;
+using RealWorld.Data;
 
 #nullable disable
 
-namespace dotnet_api_tutorial.Migrations
+namespace RealWorld.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20260316164027_Connect comments and article table")]
@@ -55,7 +55,7 @@ namespace dotnet_api_tutorial.Migrations
                     b.ToTable("UserFollows");
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.Article", b =>
+            modelBuilder.Entity("RealWorld.Models.Article", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -96,7 +96,7 @@ namespace dotnet_api_tutorial.Migrations
                     b.ToTable("Articles");
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.Comment", b =>
+            modelBuilder.Entity("RealWorld.Models.Comment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -129,7 +129,7 @@ namespace dotnet_api_tutorial.Migrations
                     b.ToTable("Comment");
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.Tag", b =>
+            modelBuilder.Entity("RealWorld.Models.Tag", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -157,7 +157,7 @@ namespace dotnet_api_tutorial.Migrations
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.User", b =>
+            modelBuilder.Entity("RealWorld.Models.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -202,13 +202,13 @@ namespace dotnet_api_tutorial.Migrations
 
             modelBuilder.Entity("ArticleUser", b =>
                 {
-                    b.HasOne("dotnet_api_tutorial.Models.Article", null)
+                    b.HasOne("RealWorld.Models.Article", null)
                         .WithMany()
                         .HasForeignKey("FavoritedArticlesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("dotnet_api_tutorial.Models.User", null)
+                    b.HasOne("RealWorld.Models.User", null)
                         .WithMany()
                         .HasForeignKey("FavoritedById")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -217,22 +217,22 @@ namespace dotnet_api_tutorial.Migrations
 
             modelBuilder.Entity("UserFollows", b =>
                 {
-                    b.HasOne("dotnet_api_tutorial.Models.User", null)
+                    b.HasOne("RealWorld.Models.User", null)
                         .WithMany()
                         .HasForeignKey("FollowerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("dotnet_api_tutorial.Models.User", null)
+                    b.HasOne("RealWorld.Models.User", null)
                         .WithMany()
                         .HasForeignKey("FollowingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.Article", b =>
+            modelBuilder.Entity("RealWorld.Models.Article", b =>
                 {
-                    b.HasOne("dotnet_api_tutorial.Models.User", "Author")
+                    b.HasOne("RealWorld.Models.User", "Author")
                         .WithMany("WrittenArticles")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -241,15 +241,15 @@ namespace dotnet_api_tutorial.Migrations
                     b.Navigation("Author");
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.Comment", b =>
+            modelBuilder.Entity("RealWorld.Models.Comment", b =>
                 {
-                    b.HasOne("dotnet_api_tutorial.Models.Article", "Article")
+                    b.HasOne("RealWorld.Models.Article", "Article")
                         .WithMany("Comments")
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("dotnet_api_tutorial.Models.User", "Author")
+                    b.HasOne("RealWorld.Models.User", "Author")
                         .WithMany()
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -260,9 +260,9 @@ namespace dotnet_api_tutorial.Migrations
                     b.Navigation("Author");
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.Tag", b =>
+            modelBuilder.Entity("RealWorld.Models.Tag", b =>
                 {
-                    b.HasOne("dotnet_api_tutorial.Models.Article", "Article")
+                    b.HasOne("RealWorld.Models.Article", "Article")
                         .WithMany("TagList")
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -271,14 +271,14 @@ namespace dotnet_api_tutorial.Migrations
                     b.Navigation("Article");
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.Article", b =>
+            modelBuilder.Entity("RealWorld.Models.Article", b =>
                 {
                     b.Navigation("Comments");
 
                     b.Navigation("TagList");
                 });
 
-            modelBuilder.Entity("dotnet_api_tutorial.Models.User", b =>
+            modelBuilder.Entity("RealWorld.Models.User", b =>
                 {
                     b.Navigation("WrittenArticles");
                 });

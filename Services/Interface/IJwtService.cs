@@ -1,7 +1,7 @@
 using System.Security.Claims;
-using dotnet_api_tutorial.Models;
+using RealWorld.Models;
 
-namespace dotnet_api_tutorial.Services.Interface;
+namespace RealWorld.Services.Interface;
 
 public interface IJwtService
 {

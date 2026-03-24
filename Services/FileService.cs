@@ -1,4 +1,4 @@
-namespace dotnet_api_tutorial.Services.Interface;
+namespace RealWorld.Services.Interface;
 
 class FileService : IFileService
 {
