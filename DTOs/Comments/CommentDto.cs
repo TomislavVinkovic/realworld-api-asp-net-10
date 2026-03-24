@@ -1,5 +1,7 @@
-using RealWorld.DTOs;
 using RealWorld.Models;
+using RealWorld.DTOs.Articles;
+
+namespace RealWorld.DTOs.Comments;
 
 public class CommentDto
 {
@@ -19,8 +21,3 @@ public class CommentDto
     public AuthorDto Author {get; set;}
     public bool Following {get; set;}
 }
-public record CommentResponse(CommentDto comment);
-public record CommentListResponse(IEnumerable<CommentDto> comments);
-
-public record CreateCommentDto(string Body);
-public record CreateCommentRequest(CreateCommentDto comment);

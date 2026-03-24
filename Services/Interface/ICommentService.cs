@@ -1,3 +1,5 @@
+using RealWorld.DTOs.Comments;
+
 namespace RealWorld.Services.Interface;
 
 public interface ICommentService

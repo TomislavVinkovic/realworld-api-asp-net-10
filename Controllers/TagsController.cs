@@ -1,5 +1,6 @@
 using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
+using RealWorld.DTOs.Tags;
 
 namespace RealWorld.Controllers
 {

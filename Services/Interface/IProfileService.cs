@@ -1,4 +1,5 @@
 using RealWorld.DTOs;
+using RealWorld.DTOs.Profiles;
 
 namespace RealWorld.Services.Interface;
 

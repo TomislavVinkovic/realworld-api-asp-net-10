@@ -1,4 +1,5 @@
 using RealWorld.DTOs;
+using RealWorld.DTOs.Articles;
 using RealWorld.Models;
 
 namespace RealWorld.Services.Interface;

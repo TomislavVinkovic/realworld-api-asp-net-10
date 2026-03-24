@@ -3,6 +3,7 @@ using RealWorld.DTOs;
 using RealWorld.Models;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
+using RealWorld.DTOs.Profiles;
 
 namespace RealWorld.Services;
 

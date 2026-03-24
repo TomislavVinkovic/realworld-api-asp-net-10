@@ -1,7 +1,6 @@
 using FluentValidation;
 using RealWorld.Data;
-using RealWorld.DTOs;
-using Microsoft.EntityFrameworkCore;
+using RealWorld.DTOs.Articles;
 
 namespace RealWorld.Validators;
 

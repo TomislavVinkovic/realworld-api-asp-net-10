@@ -1,7 +1,7 @@
-using RealWorld.DTOs;
 using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RealWorld.DTOs.Auth;
 
 namespace RealWorld.Controllers;
 
@@ -22,7 +22,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult> Login(LoginRequest request)
+    public async Task<ActionResult> Login(DTOs.Auth.LoginRequest request)
     {
         var response = await _userService.LoginAsync(request.user);
         if (response == null) return Unauthorized("Invalid credentials.");
@@ -45,7 +45,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("")]
-    public async Task<ActionResult> Register(RegisterRequest request)
+    public async Task<ActionResult> Register(DTOs.Auth.RegisterRequest request)
     {
         var response = await _userService.RegisterAsync(request.user);
         return Ok(new { user = response });

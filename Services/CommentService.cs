@@ -2,6 +2,7 @@ using RealWorld.Data;
 using RealWorld.Models;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
+using RealWorld.DTOs.Comments;
 
 namespace RealWorld.Services;
 
