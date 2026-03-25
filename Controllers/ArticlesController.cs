@@ -5,138 +5,133 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealWorld.Models.DTOs.Articles;
 
-namespace RealWorld.Controllers
+namespace RealWorld.Controllers;
+
+[Route("api/[controller]")]
+[ApiController]
+[Authorize]
+public class ArticlesController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class ArticlesController : ControllerBase
+    private readonly IArticleService _articleService;
+
+    public ArticlesController
+    (
+        IArticleService articleService
+    )
     {
-        private readonly IArticleService _articleService;
+        _articleService = articleService;
+    }
 
-        public ArticlesController
-        (
-            IArticleService articleService
-        )
+    [AllowAnonymous]
+    [HttpGet("")]
+    public async Task<ActionResult> List([FromQuery] ArticleQueryParameters query)
+    {
+        var (articles, articlesCount) = await _articleService.GetArticlesAsync(query);
+        return Ok(new ArticleListResponse(articles, articlesCount));
+    }
+
+    [HttpGet("feed")]
+    public async Task<ActionResult> Feed([FromQuery] ArticleQueryParameters query)
+    {
+        var (articles, articlesCount) = await _articleService.GetArticlesAsync(query, isFeed: true);
+        return Ok(new ArticleListResponse(articles, articlesCount));
+    }
+
+    [HttpGet("{slug}")]
+    public async Task<ActionResult> GetArticle(string slug)
+    {
+        var article = await _articleService.GetArticleBySlugAsync(slug);
+        if(article == null)
         {
-            _articleService = articleService;
+            return NotFound();
         }
 
-        [HttpGet("")]
-        public async Task<ActionResult> List([FromQuery] ArticleQueryParameters query)
-        {
-            var (articles, articlesCount) = await _articleService.GetArticlesAsync(query);
-            return Ok(new ArticleListResponse(articles, articlesCount));
-        }
+        return Ok(new ArticleResponse(article));
+    }
 
-        [Authorize]
-        [HttpGet("feed")]
-        public async Task<ActionResult> Feed([FromQuery] ArticleQueryParameters query)
+    [HttpPost("")]
+    public async Task<ActionResult> CreateArticle(CreateArticleRequest request)
+    {
+        try
         {
-            var (articles, articlesCount) = await _articleService.GetArticlesAsync(query, isFeed: true);
-            return Ok(new ArticleListResponse(articles, articlesCount));
+            var article = await _articleService.CreateAsync(request.article);
+            return Ok(new ArticleResponse(article));
         }
-
-        [HttpGet("{slug}")]
-        public async Task<ActionResult> GetArticle(string slug)
+        catch(UnauthorizedAccessException _)
         {
-            var article = await _articleService.GetArticleBySlugAsync(slug);
+            return Unauthorized();
+        }
+    }
+
+    [HttpPut("{slug}")]
+    public async Task<ActionResult> UpdateArticle(string slug, UpdateArticleRequest request)
+    {
+        try
+        {
+            var article = await _articleService.UpdateAsync(slug, request.article);
             if(article == null)
             {
                 return NotFound();
             }
-
             return Ok(new ArticleResponse(article));
         }
-
-        [Authorize]
-        [HttpPost("")]
-        public async Task<ActionResult> CreateArticle(CreateArticleRequest request)
+        catch(UnauthorizedAccessException _)
         {
-            try
-            {
-                var article = await _articleService.CreateAsync(request.article);
-                return Ok(new ArticleResponse(article));
-            }
-            catch(UnauthorizedAccessException _)
-            {
-                return Unauthorized();
-            }
+            return Unauthorized();
         }
+    }
 
-        [Authorize]
-        [HttpPut("{slug}")]
-        public async Task<ActionResult> UpdateArticle(string slug, UpdateArticleRequest request)
+    [HttpDelete("{slug}")]
+    public async Task<ActionResult> DeleteArticle(string slug)
+    {
+        try
         {
-            try
+            bool deleted = await _articleService.DeleteAsync(slug);
+            if(!deleted)
             {
-                var article = await _articleService.UpdateAsync(slug, request.article);
-                if(article == null)
-                {
-                    return NotFound();
-                }
-                return Ok(new ArticleResponse(article));
+                return NotFound();
             }
-            catch(UnauthorizedAccessException _)
-            {
-                return Unauthorized();
-            }
+            return Ok();
         }
-
-        [Authorize]
-        [HttpDelete("{slug}")]
-        public async Task<ActionResult> DeleteArticle(string slug)
+        catch (UnauthorizedAccessException _)
         {
-            try
-            {
-                bool deleted = await _articleService.DeleteAsync(slug);
-                if(!deleted)
-                {
-                    return NotFound();
-                }
-                return Ok();
-            }
-            catch (UnauthorizedAccessException _)
-            {
-                return Unauthorized();
-            }
+            return Unauthorized();
         }
+    }
 
-        [Authorize]
-        [HttpPost("{slug}/favorite")]
-        public async Task<ActionResult> FavoriteArticle(string slug)
+    [HttpPost("{slug}/favorite")]
+    public async Task<ActionResult> FavoriteArticle(string slug)
+    {
+        try
         {
-            try
+            var article = await _articleService.FavoriteArticleAsync(slug);
+            if(article == null)
             {
-                var article = await _articleService.FavoriteArticleAsync(slug);
-                if(article == null)
-                {
-                    return NotFound();
-                }
-                return Ok(new ArticleResponse(article));
+                return NotFound();
             }
-            catch (UnauthorizedAccessException _)
-            {
-                return Unauthorized();
-            }
+            return Ok(new ArticleResponse(article));
         }
-
-        [Authorize]
-        [HttpDelete("{slug}/unfavorite")]
-        public async Task<ActionResult> UnfavoriteArticle(string slug)
+        catch (UnauthorizedAccessException _)
         {
-            try
+            return Unauthorized();
+        }
+    }
+
+    [HttpDelete("{slug}/unfavorite")]
+    public async Task<ActionResult> UnfavoriteArticle(string slug)
+    {
+        try
+        {
+            var article = await _articleService.UnfavoriteArticleAsync(slug);
+            if(article == null)
             {
-                var article = await _articleService.UnfavoriteArticleAsync(slug);
-                if(article == null)
-                {
-                    return NotFound();
-                }
-                return Ok(new ArticleResponse(article));
+                return NotFound();
             }
-            catch (UnauthorizedAccessException _)
-            {
-                return Unauthorized();
-            }
+            return Ok(new ArticleResponse(article));
+        }
+        catch (UnauthorizedAccessException _)
+        {
+            return Unauthorized();
         }
     }
 }

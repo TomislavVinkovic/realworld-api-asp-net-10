@@ -31,6 +31,13 @@ public class UsersController : ControllerBase
         return Ok(new UserResponse(user));
     }
 
+    [HttpPost("")]
+    public async Task<ActionResult> Register(RegisterRequest request)
+    {
+        UserDto? user = await _userService.RegisterAsync(request.user);
+        return Ok(new UserResponse(user));
+    }
+
     [Authorize]
     [HttpGet("logout")]
     public async Task<ActionResult> Logout()
@@ -43,13 +50,6 @@ public class UsersController : ControllerBase
         }
 
         return NoContent();
-    }
-
-    [HttpPost("")]
-    public async Task<ActionResult> Register(RegisterRequest request)
-    {
-        UserDto? user = await _userService.RegisterAsync(request.user);
-        return Ok(new UserResponse(user));
     }
 
     [HttpPost("refresh")]

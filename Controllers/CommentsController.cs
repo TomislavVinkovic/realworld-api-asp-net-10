@@ -3,56 +3,55 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealWorld.Models.DTOs.Comments;
 
-namespace RealWorld.Controllers
+namespace RealWorld.Controllers;
+
+[Route("api/articles")]
+[ApiController]
+[Authorize]
+public class CommentsController : ControllerBase
 {
-    [Route("api/articles")]
-    [ApiController]
-    public class CommentsController : ControllerBase
+    private readonly ICommentService _commentService;
+
+    public CommentsController
+    (
+        ICommentService commentService
+    )
     {
-        private readonly ICommentService _commentService;
+        _commentService = commentService;
+    }
 
-        public CommentsController
-        (
-            ICommentService commentService
-        )
+    [AllowAnonymous]
+    [HttpGet("{slug}/comments")]
+    public async Task<ActionResult> GetComments(string slug)
+    {
+        var comments = await _commentService.GetCommentsForArticleAsync(slug);
+        if(comments == null)
         {
-            _commentService = commentService;
+            return NotFound("Article not found");
         }
 
-        [HttpGet("{slug}/comments")]
-        public async Task<ActionResult> GetComments(string slug)
-        {
-            var comments = await _commentService.GetCommentsForArticleAsync(slug);
-            if(comments == null)
-            {
-                return NotFound("Article not found");
-            }
+        return Ok(new CommentListResponse(comments));
+    }
 
-            return Ok(new CommentListResponse(comments));
-        }
-
-        [Authorize]
-        [HttpPost("{slug}/comments")]
-        public async Task<ActionResult> CreateComment(CreateCommentRequest request, string slug)
+    [HttpPost("{slug}/comments")]
+    public async Task<ActionResult> CreateComment(CreateCommentRequest request, string slug)
+    {
+        var comment = await _commentService.CreateAsync(request.comment, slug);
+        if(comment == null)
         {
-            var comment = await _commentService.CreateAsync(request.comment, slug);
-            if(comment == null)
-            {
-                return NotFound("Article not found");
-            }
-            return Ok(new CommentResponse(comment));
+            return NotFound("Article not found");
         }
+        return Ok(new CommentResponse(comment));
+    }
 
-        [Authorize]
-        [HttpDelete("{slug}/comments/{id}")]
-        public async Task<ActionResult> DeleteComment(string slug, int id)
+    [HttpDelete("{slug}/comments/{id}")]
+    public async Task<ActionResult> DeleteComment(string slug, int id)
+    {
+        bool deleted = await _commentService.DeleteAsync(id);
+        if(!deleted)
         {
-            bool deleted = await _commentService.DeleteAsync(id);
-            if(!deleted)
-            {
-                return NotFound("Comment not found");
-            }
-            return Ok();
+            return NotFound("Comment not found");
         }
+        return Ok();
     }
 }
