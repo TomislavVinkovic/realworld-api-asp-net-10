@@ -1,9 +1,9 @@
 using RealWorld.Data;
-using RealWorld.DTOs;
-using RealWorld.Models;
+using RealWorld.Models.DTOs;
+using RealWorld.Models.Entities;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
-using RealWorld.DTOs.Articles;
+using RealWorld.Models.DTOs.Articles;
 using Mapster;
 
 namespace RealWorld.Services;

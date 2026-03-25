@@ -1,10 +1,10 @@
 using System.Security.Claims;
 using RealWorld.Data;
-using RealWorld.DTOs;
-using RealWorld.Models;
+using RealWorld.Models.DTOs;
+using RealWorld.Models.Entities;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
-using RealWorld.DTOs.Auth;
+using RealWorld.Models.DTOs.Auth;
 using Mapster;
 
 namespace RealWorld.Services;

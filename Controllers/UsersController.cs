@@ -1,7 +1,7 @@
 using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RealWorld.DTOs.Auth;
+using RealWorld.Models.DTOs.Auth;
 using Mapster;
 
 namespace RealWorld.Controllers;
@@ -116,7 +116,7 @@ public class UsersController : ControllerBase
             UserDto? user = await _userService.UpdateUserAsync(updateDto);
             if (user == null)
             {
-                return NotFound();   
+                return NotFound();
             }
             return Ok(new UserResponse(user));
         }

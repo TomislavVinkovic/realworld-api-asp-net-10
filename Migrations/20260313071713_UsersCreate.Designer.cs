@@ -24,7 +24,7 @@ namespace RealWorld.Migrations
 
             MySqlModelBuilderExtensions.AutoIncrementColumns(modelBuilder);
 
-            modelBuilder.Entity("RealWorld.Models.User", b =>
+            modelBuilder.Entity("RealWorld.Models.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()

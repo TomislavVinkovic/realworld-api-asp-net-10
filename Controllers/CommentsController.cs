@@ -1,7 +1,7 @@
 using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RealWorld.DTOs.Comments;
+using RealWorld.Models.DTOs.Comments;
 
 namespace RealWorld.Controllers
 {

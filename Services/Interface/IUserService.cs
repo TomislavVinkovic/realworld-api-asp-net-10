@@ -1,6 +1,6 @@
-using RealWorld.DTOs;
-using RealWorld.DTOs.Auth;
-using RealWorld.Models;
+using RealWorld.Models.DTOs;
+using RealWorld.Models.DTOs.Auth;
+using RealWorld.Models.Entities;
 
 namespace RealWorld.Services.Interface;
 

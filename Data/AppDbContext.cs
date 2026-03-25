@@ -1,4 +1,4 @@
-﻿using RealWorld.Models;
+﻿using RealWorld.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 
 namespace RealWorld.Data;

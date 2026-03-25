@@ -55,7 +55,7 @@ namespace RealWorld.Migrations
                     b.ToTable("UserFollows", (string)null);
                 });
 
-            modelBuilder.Entity("RealWorld.Models.Article", b =>
+            modelBuilder.Entity("RealWorld.Models.Entities.Article", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -96,7 +96,7 @@ namespace RealWorld.Migrations
                     b.ToTable("Articles");
                 });
 
-            modelBuilder.Entity("RealWorld.Models.Tag", b =>
+            modelBuilder.Entity("RealWorld.Models.Entities.Tag", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -124,7 +124,7 @@ namespace RealWorld.Migrations
                     b.ToTable("Tags");
                 });
 
-            modelBuilder.Entity("RealWorld.Models.User", b =>
+            modelBuilder.Entity("RealWorld.Models.Entities.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -169,13 +169,13 @@ namespace RealWorld.Migrations
 
             modelBuilder.Entity("ArticleUser", b =>
                 {
-                    b.HasOne("RealWorld.Models.Article", null)
+                    b.HasOne("RealWorld.Models.Entities.Article", null)
                         .WithMany()
                         .HasForeignKey("FavoritedArticlesId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RealWorld.Models.User", null)
+                    b.HasOne("RealWorld.Models.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("FavoritedById")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -184,22 +184,22 @@ namespace RealWorld.Migrations
 
             modelBuilder.Entity("UserUser", b =>
                 {
-                    b.HasOne("RealWorld.Models.User", null)
+                    b.HasOne("RealWorld.Models.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("FollowersId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("RealWorld.Models.User", null)
+                    b.HasOne("RealWorld.Models.Entities.User", null)
                         .WithMany()
                         .HasForeignKey("FollowingId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("RealWorld.Models.Article", b =>
+            modelBuilder.Entity("RealWorld.Models.Entities.Article", b =>
                 {
-                    b.HasOne("RealWorld.Models.User", "Author")
+                    b.HasOne("RealWorld.Models.Entities.User", "Author")
                         .WithMany("WrittenArticles")
                         .HasForeignKey("AuthorId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -208,9 +208,9 @@ namespace RealWorld.Migrations
                     b.Navigation("Author");
                 });
 
-            modelBuilder.Entity("RealWorld.Models.Tag", b =>
+            modelBuilder.Entity("RealWorld.Models.Entities.Tag", b =>
                 {
-                    b.HasOne("RealWorld.Models.Article", "Article")
+                    b.HasOne("RealWorld.Models.Entities.Article", "Article")
                         .WithMany("TagList")
                         .HasForeignKey("ArticleId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -219,12 +219,12 @@ namespace RealWorld.Migrations
                     b.Navigation("Article");
                 });
 
-            modelBuilder.Entity("RealWorld.Models.Article", b =>
+            modelBuilder.Entity("RealWorld.Models.Entities.Article", b =>
                 {
                     b.Navigation("TagList");
                 });
 
-            modelBuilder.Entity("RealWorld.Models.User", b =>
+            modelBuilder.Entity("RealWorld.Models.Entities.User", b =>
                 {
                     b.Navigation("WrittenArticles");
                 });

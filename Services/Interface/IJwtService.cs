@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using RealWorld.Models;
+using RealWorld.Models.Entities;
 
 namespace RealWorld.Services.Interface;
 

@@ -1,7 +1,7 @@
 using Mapster;
-using RealWorld.DTOs.Articles;
-using RealWorld.DTOs.Comments;
-using RealWorld.Models;
+using RealWorld.Models.DTOs.Articles;
+using RealWorld.Models.DTOs.Comments;
+using RealWorld.Models.Entities;
 
 namespace RealWorld.Mappings;
 

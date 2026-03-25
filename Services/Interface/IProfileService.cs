@@ -1,5 +1,5 @@
-using RealWorld.DTOs;
-using RealWorld.DTOs.Profiles;
+using RealWorld.Models.DTOs;
+using RealWorld.Models.DTOs.Profiles;
 
 namespace RealWorld.Services.Interface;
 

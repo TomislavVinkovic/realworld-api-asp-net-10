@@ -1,9 +1,9 @@
 using RealWorld.Data;
-using RealWorld.DTOs;
+using RealWorld.Models.DTOs;
 using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using RealWorld.DTOs.Profiles;
+using RealWorld.Models.DTOs.Profiles;
 
 namespace RealWorld.Controllers
 {

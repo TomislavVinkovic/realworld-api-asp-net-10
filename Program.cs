@@ -7,8 +7,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using FluentValidation;
-using RealWorld.Filters;
 using RealWorld.Mappings;
+using RealWorld.Models.Validators.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 

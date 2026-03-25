@@ -1,4 +1,4 @@
-using RealWorld.DTOs.Comments;
+using RealWorld.Models.DTOs.Comments;
 
 namespace RealWorld.Services.Interface;
 

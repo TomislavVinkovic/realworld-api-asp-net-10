@@ -1,8 +1,8 @@
 using RealWorld.Data;
-using RealWorld.Models;
+using RealWorld.Models.Entities;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
-using RealWorld.DTOs.Comments;
+using RealWorld.Models.DTOs.Comments;
 using Mapster;
 
 namespace RealWorld.Services;
