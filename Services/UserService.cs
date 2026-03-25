@@ -5,6 +5,7 @@ using RealWorld.Models;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using RealWorld.DTOs.Auth;
+using Mapster;
 
 namespace RealWorld.Services;
 
@@ -28,7 +29,7 @@ public class UserService : IUserService
         _httpContextService = httpContextService;
     }
 
-    public async Task<UserResponse?> LoginAsync(LoginDto dto)
+    public async Task<UserDto?> LoginAsync(LoginDto dto)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
 
@@ -42,19 +43,12 @@ public class UserService : IUserService
         user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
 
         await _context.SaveChangesAsync();
-
-        var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
-        return new UserResponse(
-            user.Email, 
-            accessToken, 
-            refreshToken, 
-            user.Username, 
-            user.Bio, 
-            fullImageUrl
-        );
+        
+        var userDto = await UserDtoFactory(user, accessToken, refreshToken);
+        return userDto;
     }
 
-    public async Task<UserResponse> RegisterAsync(RegisterDto dto)
+    public async Task<UserDto> RegisterAsync(RegisterDto dto)
     {   
         var user = new User
         {
@@ -69,16 +63,8 @@ public class UserService : IUserService
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = _jwtService.GenerateRefreshToken();
 
-        var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
-
-        return new UserResponse(
-            user.Email, 
-            accessToken, 
-            refreshToken, 
-            user.Username, 
-            user.Bio, 
-            fullImageUrl
-        );
+        var userDto = await UserDtoFactory(user, accessToken, refreshToken);
+        return userDto;
     }
 
     public async Task<bool> LogoutAsync()
@@ -98,7 +84,7 @@ public class UserService : IUserService
         return true;
     }
 
-    public async Task<UserResponse?> RefreshAsync(TokenRequest request)
+    public async Task<UserDto?> RefreshAsync(TokenRequest request)
     {
         var principal = _jwtService.GetPrincipalFromExpiredToken(request.AccessToken);
         var userIdString = principal.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -117,18 +103,11 @@ public class UserService : IUserService
         user.RefreshToken = newRefreshToken;
         await _context.SaveChangesAsync();
 
-        var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
-        return new UserResponse(
-            user.Email, 
-            newAccessToken, 
-            newRefreshToken, 
-            user.Username, 
-            user.Bio, 
-            fullImageUrl
-        );
+        var userDto = await UserDtoFactory(user, newAccessToken, newRefreshToken);
+        return userDto;
     }
 
-    public async Task<UserResponse?> GetCurrentUserAsync(string currentToken)
+    public async Task<UserDto?> GetCurrentUserAsync(string currentToken)
     {
         var userId = _httpContextService.GetCurrentUserId();
         if (userId == null) return null;
@@ -136,18 +115,11 @@ public class UserService : IUserService
         var user = await _context.Users.FindAsync(userId);
         if (user == null) return null;
 
-        var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
-        return new UserResponse(
-            user.Email, 
-            currentToken, 
-            user.RefreshToken!, 
-            user.Username, 
-            user.Bio, 
-            fullImageUrl
-        );
+        var userDto = await UserDtoFactory(user, currentToken);
+        return userDto;
     }
 
-    public async Task<UserResponse?> UpdateUserAsync(UpdateUserDto dto)
+    public async Task<UserDto?> UpdateUserAsync(UpdateUserDto dto)
     {
         var userId = _httpContextService.GetCurrentUserId();
         var user = await _context.Users.FindAsync(userId);
@@ -182,14 +154,23 @@ public class UserService : IUserService
 
         var newAccessToken = _jwtService.GenerateAccessToken(user);
 
+        var userDto = await UserDtoFactory(user, newAccessToken);
+        return userDto;
+    }
+
+    private async Task<UserDto> UserDtoFactory(
+        User user, 
+        string accessToken, 
+        string refreshToken = ""
+    )
+    {
         var fullImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
-        return new UserResponse(
-            user.Email, 
-            newAccessToken, 
-            user.RefreshToken, 
-            user.Username, 
-            user.Bio, 
-            fullImageUrl
-        );
+
+        var userDto = user.Adapt<UserDto>();
+        userDto.Token = accessToken;
+        userDto.RefreshToken = refreshToken == "" ? user.RefreshToken! : refreshToken;
+        userDto.Image = fullImageUrl;
+
+        return userDto;
     }
 }

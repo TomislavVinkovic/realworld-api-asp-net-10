@@ -2,9 +2,9 @@ namespace RealWorld.DTOs.Auth;
 
 public record UpdateUserDto
 {
-    public string? Email { get; init; }
-    public string? Username { get; init; }
-    public string? Bio { get; init; }
-    public string? Image { get; init; }
-    public string? Password { get; init; }
+    public string? Email { get; set; }
+    public string? Username { get; set; }
+    public string? Bio { get; set; }
+    public string? Image { get; set; }
+    public string? Password { get; set; }
 }

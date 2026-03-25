@@ -3,6 +3,7 @@ using RealWorld.Models;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using RealWorld.DTOs.Comments;
+using Mapster;
 
 namespace RealWorld.Services;
 
@@ -50,12 +51,12 @@ public class CommentService : ICommentService
             // Put them in a HashSet for lightning-fast lookups in the next step
             followedAuthorIds = new HashSet<int>(followedList);
 
-            return article.Comments.Select(c => 
-                new CommentDto(c, followedAuthorIds.Contains(c.Author.Id))
+            return article.Comments.Select(c =>
+                CommentDtoFactory(c, followedAuthorIds.Contains(c.Author.Id))
             );
         }
         
-        return article.Comments.Select(c => new CommentDto(c, false));
+        return article.Comments.Select(c => CommentDtoFactory(c, false));
     }
 
     public async Task<CommentDto?> CreateAsync(CreateCommentDto dto, string slug)
@@ -79,7 +80,7 @@ public class CommentService : ICommentService
         await _context.SaveChangesAsync();
         await _context.Entry(newComment).Reference(c => c.Author).LoadAsync();
 
-        return new CommentDto(newComment, false);
+        return CommentDtoFactory(newComment, false);
     }
 
     public async Task<bool> DeleteAsync(int id)
@@ -102,5 +103,13 @@ public class CommentService : ICommentService
             .ExecuteDeleteAsync();
 
         return true;
+    }
+
+    private CommentDto CommentDtoFactory(Comment comment, bool isFollowing)
+    {
+        var c = comment.Adapt<CommentDto>();
+        c.Author.Following = isFollowing;
+
+        return c;
     }
 }

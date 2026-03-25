@@ -2,6 +2,7 @@ using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealWorld.DTOs.Auth;
+using Mapster;
 
 namespace RealWorld.Controllers;
 
@@ -22,12 +23,12 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult> Login(DTOs.Auth.LoginRequest request)
+    public async Task<ActionResult> Login(LoginRequest request)
     {
-        var response = await _userService.LoginAsync(request.user);
-        if (response == null) return Unauthorized("Invalid credentials.");
+        UserDto? user = await _userService.LoginAsync(request.user);
+        if (user == null) return Unauthorized("Invalid credentials.");
 
-        return Ok(new { user = response });
+        return Ok(new UserResponse(user));
     }
 
     [Authorize]
@@ -45,21 +46,21 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost("")]
-    public async Task<ActionResult> Register(DTOs.Auth.RegisterRequest request)
+    public async Task<ActionResult> Register(RegisterRequest request)
     {
-        var response = await _userService.RegisterAsync(request.user);
-        return Ok(new { user = response });
+        UserDto? user = await _userService.RegisterAsync(request.user);
+        return Ok(new UserResponse(user));
     }
 
     [HttpPost("refresh")]
     public async Task<ActionResult> Refresh(TokenRequest request)
     {
-        var response = await _userService.RefreshAsync(request);
-        if (response == null)
+        UserDto? user = await _userService.RefreshAsync(request);
+        if (user == null)
         {
             return BadRequest("Invalid or expired refresh token. Please log in again.");
         }
-        return Ok(new { user = response });
+        return Ok(new UserResponse(user));
     }
 
     [Authorize]
@@ -70,9 +71,9 @@ public class UsersController : ControllerBase
         var currentAccessToken = HttpContext.Request.Headers["Authorization"]
             .FirstOrDefault()?.Split(" ").Last() ?? "";
 
-        var response = await _userService.GetCurrentUserAsync(currentAccessToken);
-        if (response == null) return NotFound();
-        return Ok(new { user = response });
+        UserDto? user = await _userService.GetCurrentUserAsync(currentAccessToken);
+        if (user == null) return NotFound();
+        return Ok(new UserResponse(user));
     }
 
     [Authorize]
@@ -82,17 +83,11 @@ public class UsersController : ControllerBase
         var currentAccessToken = HttpContext.Request.Headers["Authorization"]
             .FirstOrDefault()?.Split(" ").Last() ?? "";
 
-        var user = await _userService.GetCurrentUserAsync(currentAccessToken);
+        UserDto? user = await _userService.GetCurrentUserAsync(currentAccessToken);
         if (user == null) return NotFound();
 
-        var userDto = new EditUserDto
-        {
-            Email = user.Email,
-            Bio = user.Bio,
-            Image = user.Image,
-            Username = user.Username
-        };
-        return Ok(new EditUserResponse(userDto));
+        var editDto = user.Adapt<EditUserDto>();
+        return Ok(new EditUserResponse(editDto));
     }
 
     [Authorize]
@@ -113,23 +108,17 @@ public class UsersController : ControllerBase
             }
         }
 
-        var updateDto = new UpdateUserDto
-        {
-            Email = request.user.Email,
-            Username = request.user.Username,
-            Password = request.user.Password,
-            Bio = request.user.Bio,
-            Image = relativeImagePath // Pass the relative path (or null if no upload)
-        };
+        var updateDto = request.user.Adapt<UpdateUserDto>();
+        updateDto.Image = relativeImagePath;
 
         try
         {
-            var response = await _userService.UpdateUserAsync(updateDto);
-            if (response == null)
+            UserDto? user = await _userService.UpdateUserAsync(updateDto);
+            if (user == null)
             {
                 return NotFound();   
             }
-            return Ok(new { user = response });
+            return Ok(new UserResponse(user));
         }
         catch (ArgumentException e)
         {

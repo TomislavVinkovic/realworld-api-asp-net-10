@@ -4,6 +4,7 @@ using RealWorld.Models;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using RealWorld.DTOs.Articles;
+using Mapster;
 
 namespace RealWorld.Services;
 
@@ -267,7 +268,9 @@ public class ArticleService : IArticleService {
 
     private ArticleDto ArticleDtoFactory(Article article, bool isFavorited, bool isFollowing)
     {
-        var a = new ArticleDto(article, isFavorited, isFollowing);
+        var a = article.Adapt<ArticleDto>();
+        a.Favorited = isFavorited;
+        a.Author.Following = isFollowing;
         
         // Manufacture the profile image URL
         var absoluteFileUrl = _fileService.GetAbsoluteFileUrl(article.Author.Image);

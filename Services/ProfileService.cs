@@ -4,6 +4,7 @@ using RealWorld.Models;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using RealWorld.DTOs.Profiles;
+using Mapster;
 
 namespace RealWorld.Services;
 
@@ -42,15 +43,8 @@ public class ProfileService : IProfileService
                 .FirstOrDefaultAsync(u => u.Id == currentUserId);
             isFollowingUser = currentUser!.Following.Any(u => u.Username == user.Username);
         }
-        
-        var profileImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
-        return new ProfileDto
-        (
-            Username: user.Username,
-            Bio: user.Bio,
-            Image: profileImageUrl,
-            Following: isFollowingUser
-        );
+
+        return ProfileDtoFactory(user, isFollowingUser);
     }
 
     public async Task<ProfileDto?> FollowUserAsync(string username)
@@ -79,14 +73,7 @@ public class ProfileService : IProfileService
             currentUser.Following.Add(userToFollow);
             await _context.SaveChangesAsync();
         }
-
-        return new ProfileDto
-        (
-            userToFollow.Username,
-            userToFollow.Bio,
-            userToFollow.Image,
-            true
-        );
+        return ProfileDtoFactory(userToFollow, true);
     }
 
     public async Task<ProfileDto?> UnfollowUserAsync(string username)
@@ -100,27 +87,32 @@ public class ProfileService : IProfileService
         var currentUser = await _context.Users
             .Include(u => u.Following)
             .FirstOrDefaultAsync(u => u.Id == currentUserId);
-        var userToFollow = await _context.Users
+        var userToUnfollow = await _context.Users
             .Where(u => u.Username == username)
             .FirstOrDefaultAsync();
 
-        if(userToFollow == null)
+        if(userToUnfollow == null)
         {
             return null;
         }
 
-        if(currentUser!.Following.Any(u => u.Username == userToFollow.Username))
+        if(currentUser!.Following.Any(u => u.Username == userToUnfollow.Username))
         {
-            currentUser.Following.Remove(userToFollow);
+            currentUser.Following.Remove(userToUnfollow);
             await _context.SaveChangesAsync();
         }
 
-        return new ProfileDto
-        (
-            userToFollow.Username,
-            userToFollow.Bio,
-            userToFollow.Image,
-            false
-        );
+        return ProfileDtoFactory(userToUnfollow, false);
+    }
+
+    private ProfileDto ProfileDtoFactory(User user, bool isFollowingUser)
+    {
+        var profile = user.Adapt<ProfileDto>();
+        var profileImageUrl = _fileService.GetAbsoluteFileUrl(user.Image);
+
+        profile.Image = profileImageUrl;
+        profile.Following = isFollowingUser;
+
+        return profile;
     }
 }

@@ -1,8 +1,9 @@
 namespace RealWorld.DTOs.Profiles;
 
-public record ProfileDto(
-    string Username, 
-    string? Bio, 
-    string? Image, 
-    bool Following
-);
+public class ProfileDto
+{
+    public string Username { get; set; } = "";
+    public string? Bio { get; set; }
+    public string? Image { get; set; }
+    public bool Following { get; set; }
+}

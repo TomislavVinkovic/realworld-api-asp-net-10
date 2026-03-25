@@ -8,8 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using FluentValidation;
 using RealWorld.Filters;
+using RealWorld.Mappings;
 
 var builder = WebApplication.CreateBuilder(args);
+
+MapsterConfig.RegisterMappings();
 
 // Add services to the container.
 
