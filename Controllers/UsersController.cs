@@ -26,8 +26,10 @@ public class UsersController : ControllerBase
     public async Task<ActionResult> Login(LoginRequest request)
     {
         UserDto? user = await _userService.LoginAsync(request.user);
-        if (user == null) return Unauthorized("Invalid credentials.");
-
+        if (user == null)
+        {
+            return Unauthorized("Invalid credentials.");
+        }
         return Ok(new UserResponse(user));
     }
 
@@ -36,20 +38,6 @@ public class UsersController : ControllerBase
     {
         UserDto? user = await _userService.RegisterAsync(request.user);
         return Ok(new UserResponse(user));
-    }
-
-    [Authorize]
-    [HttpGet("logout")]
-    public async Task<ActionResult> Logout()
-    {
-        var success = await _userService.LogoutAsync();
-
-        if (!success)
-        {
-            return Unauthorized(); 
-        }
-
-        return NoContent();
     }
 
     [HttpPost("refresh")]
@@ -64,15 +52,29 @@ public class UsersController : ControllerBase
     }
 
     [Authorize]
+    [HttpGet("logout")]
+    public async Task<ActionResult> Logout()
+    {
+        var success = await _userService.LogoutAsync();
+        if (!success)
+        {
+            return Unauthorized(); 
+        }
+        return NoContent();
+    }
+
+    [Authorize]
     [HttpGet("")]
     public async Task<ActionResult> GetCurrentUser()
     {
-        // Extract the token directly from the header to hand it to the service
         var currentAccessToken = HttpContext.Request.Headers["Authorization"]
             .FirstOrDefault()?.Split(" ").Last() ?? "";
 
         UserDto? user = await _userService.GetCurrentUserAsync(currentAccessToken);
-        if (user == null) return NotFound();
+        if (user == null) 
+        {
+            return NotFound();
+        }
         return Ok(new UserResponse(user));
     }
 
@@ -95,35 +97,16 @@ public class UsersController : ControllerBase
     public async Task<ActionResult> UpdateUser ([FromForm] UpdateUserRequest request)
     {
         string? relativeImagePath = null;
-
-        if (request.user.Image != null && request.user.Image.Length > 0)
+        if (request.user.Image?.Length > 0)
         {
-            try
-            {
-                relativeImagePath = await _fileService.UploadImageAsync(request.user.Image);
-            }
-            catch (ArgumentException ex)
-            {
-                return BadRequest(new { errors = new { image = new[] { ex.Message } } });
-            }
+            relativeImagePath = await _fileService.UploadImageAsync(request.user.Image);
         }
 
         var updateDto = request.user.Adapt<UpdateUserDto>();
         updateDto.Image = relativeImagePath;
 
-        try
-        {
-            UserDto? user = await _userService.UpdateUserAsync(updateDto);
-            if (user == null)
-            {
-                return NotFound();
-            }
-            return Ok(new UserResponse(user));
-        }
-        catch (ArgumentException e)
-        {
-            // Catching duplicates for both email and username dynamically!
-            return BadRequest(new { errors = new Dictionary<string, string[]> { { e.Message, new[] { "has already been taken" } } } });
-        }
+        var user = await _userService.UpdateUserAsync(updateDto);
+
+        return Ok(new UserResponse(user));
     }
 }

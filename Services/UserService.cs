@@ -34,7 +34,9 @@ public class UserService : IUserService
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
-            return null; // Signals to the controller to return 401 Unauthorized
+        {
+            return null;
+        }
 
         var accessToken = _jwtService.GenerateAccessToken(user);
         var refreshToken = _jwtService.GenerateRefreshToken();
@@ -70,12 +72,17 @@ public class UserService : IUserService
     public async Task<bool> LogoutAsync()
     {
         var userId = _httpContextService.GetCurrentUserId();
-        if (userId == null) return false;
+        if (userId == null)
+        {
+            return false;
+        }
 
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) return false;
+        if (user == null)
+        {
+            return false;
+        }
 
-        // 3. SECURE LOGOUT: Wipe the refresh token so it can never be used again
         user.RefreshToken = null;
         user.RefreshTokenExpiryTime = null;
 
@@ -89,12 +96,15 @@ public class UserService : IUserService
         var principal = _jwtService.GetPrincipalFromExpiredToken(request.AccessToken);
         var userIdString = principal.FindFirstValue(ClaimTypes.NameIdentifier);
         
-        if (string.IsNullOrEmpty(userIdString)) return null;
+        if (string.IsNullOrEmpty(userIdString))
+        {
+            return null;
+        }
 
         var user = await _context.Users.FindAsync(int.Parse(userIdString));
         if (user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
         {
-            return null; // Signals invalid refresh token
+            return null;
         }
 
         var newAccessToken = _jwtService.GenerateAccessToken(user);
@@ -110,10 +120,16 @@ public class UserService : IUserService
     public async Task<UserDto?> GetCurrentUserAsync(string currentToken)
     {
         var userId = _httpContextService.GetCurrentUserId();
-        if (userId == null) return null;
+        if (userId == null)
+        {
+            return null;
+        }
 
         var user = await _context.Users.FindAsync(userId);
-        if (user == null) return null;
+        if (user == null)
+        {
+            return null;
+        }
 
         var userDto = await UserDtoFactory(user, currentToken);
         return userDto;
@@ -124,12 +140,17 @@ public class UserService : IUserService
         var userId = _httpContextService.GetCurrentUserId();
         var user = await _context.Users.FindAsync(userId);
         
-        if (user == null) return null;
+        if (user == null)
+        {
+            return null;
+        }
 
         if (!string.IsNullOrEmpty(dto.Email) && dto.Email != user.Email)
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
-                throw new ArgumentException("email"); // Caught by controller
+            {
+                throw new ArgumentException("email");
+            }
             
             user.Email = dto.Email;
         }
@@ -137,8 +158,9 @@ public class UserService : IUserService
         if (!string.IsNullOrEmpty(dto.Username) && dto.Username != user.Username)
         {
             if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
-                throw new ArgumentException("username"); // Caught by controller
-            
+            {
+                throw new ArgumentException("username");
+            }
             user.Username = dto.Username;
         }
 
@@ -147,8 +169,14 @@ public class UserService : IUserService
             user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
         }
 
-        if (dto.Bio != null) user.Bio = dto.Bio;
-        if (dto.Image != null) user.Image = dto.Image;
+        if (dto.Bio != null)
+        {
+            user.Bio = dto.Bio;
+        }
+        if (dto.Image != null)
+        {
+            user.Image = dto.Image;
+        }
 
         await _context.SaveChangesAsync();
 

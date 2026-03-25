@@ -1,5 +1,4 @@
 using RealWorld.Data;
-using RealWorld.Models.DTOs;
 using RealWorld.Models.Entities;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;

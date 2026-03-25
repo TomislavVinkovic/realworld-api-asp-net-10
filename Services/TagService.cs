@@ -9,8 +9,7 @@ public class TagService : ITagService
     private readonly AppDbContext _context;
 
     public TagService(
-        AppDbContext context,
-        IHttpContextService httpContextService
+        AppDbContext context
     )
     {
         _context = context;

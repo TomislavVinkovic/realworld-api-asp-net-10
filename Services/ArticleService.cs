@@ -1,5 +1,4 @@
 using RealWorld.Data;
-using RealWorld.Models.DTOs;
 using RealWorld.Models.Entities;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
@@ -40,7 +39,8 @@ public class ArticleService : IArticleService {
             .Include(a => a.FavoritedBy)
             .AsQueryable();
 
-        if(!string.IsNullOrEmpty(query.Author)) {
+        if(!string.IsNullOrEmpty(query.Author)) 
+        {
             articlesQuery = articlesQuery.Where(a => a.Author.Username == query.Author);
         }
         if(!string.IsNullOrEmpty(query.Tag))
@@ -126,7 +126,7 @@ public class ArticleService : IArticleService {
             Description = dto.Description,
             Body = dto.Body,
             Slug = slug, 
-            AuthorId = (int) currentUserId
+            AuthorId = (int) currentUserId!
         };
         
         if(dto.TagList.Any())

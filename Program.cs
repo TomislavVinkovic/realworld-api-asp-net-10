@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using FluentValidation;
 using RealWorld.Mappings;
 using RealWorld.Models.Validators.Filters;
+using RealWorld.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,6 +93,9 @@ builder.Services.AddCors(options =>
     });
 });
 
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -107,10 +111,13 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseCors("Frontend");
+
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.UseStaticFiles();
+
+app.UseExceptionHandler();
 app.MapControllers();
 
 app.Run();
