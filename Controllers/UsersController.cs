@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealWorld.Models.DTOs.Auth;
 using RealWorld.Extensions;
+using Mapster;
 
 namespace RealWorld.Controllers;
 
@@ -11,10 +12,19 @@ namespace RealWorld.Controllers;
 public class UsersController : ApiControllerBase
 {
     private readonly IUserService _userService;
+    private readonly IFileService _fileService;
+    private readonly IConfiguration _configuration;
 
-    public UsersController(IUserService userService)
+    public UsersController
+    (
+        IUserService userService,
+        IFileService fileService,
+        IConfiguration configuration
+    )
     {
         _userService = userService;
+        _fileService = fileService;
+        _configuration = configuration;
     }
 
     [HttpPost("login")]
@@ -72,7 +82,22 @@ public class UsersController : ApiControllerBase
     [HttpPut("")]
     public async Task<ActionResult> UpdateUser ([FromForm] UpdateUserRequest request)
     {
-        var result = await _userService.UpdateUserAsync(request.user, User.GetRequiredUserId());
+        string? relativeImagePath = null;
+        var file = request.user.Image;
+
+        // 1. Just process the file if it exists
+        if (file != null && file.Length > 0)
+        {
+            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            using var stream = file.OpenReadStream();
+            relativeImagePath = await _fileService.UploadAsync(stream, extension);
+        }
+
+        // 2. Map and pass to service
+        var updateDto = request.user.Adapt<UpdateUserDto>();
+        updateDto.Image = relativeImagePath;
+
+        var result = await _userService.UpdateUserAsync(updateDto, User.GetRequiredUserId());
         return HandleResult(result);
     }
 }

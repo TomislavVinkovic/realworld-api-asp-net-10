@@ -5,6 +5,6 @@ using RealWorld.Common;
 
 public interface IFileService
 {
-    Task<ServiceResult<string>> UploadImageAsync(IFormFile file);
+    Task<string> UploadAsync(Stream fileStream, string extension);
     public string? GetAbsoluteFileUrl(string? relativeUrl);
 }

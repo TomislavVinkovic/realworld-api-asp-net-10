@@ -10,5 +10,5 @@ public interface IUserService
     Task<ServiceResult<UserResponse>> RegisterAsync(RegisterDto dto);
     Task<ServiceResult<UserResponse?>> RefreshAsync(TokenRequest request);
     Task<ServiceResult<UserResponse?>> GetCurrentUserAsync(string currentToken, int userId);
-    Task<ServiceResult<UserResponse?>> UpdateUserAsync(UpdateUserFormDto dto, int userId);
+    Task<ServiceResult<UserResponse?>> UpdateUserAsync(UpdateUserDto dto, int userId);
 }

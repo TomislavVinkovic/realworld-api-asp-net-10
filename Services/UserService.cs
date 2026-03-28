@@ -128,7 +128,7 @@ public class UserService : IUserService
         return ServiceResult<UserResponse?>.Ok(response);
     }
 
-    public async Task<ServiceResult<UserResponse?>> UpdateUserAsync(UpdateUserFormDto dto, int userId)
+    public async Task<ServiceResult<UserResponse?>> UpdateUserAsync(UpdateUserDto dto, int userId)
     {
         var user = await _context.Users.FindAsync(userId);
         
@@ -160,20 +160,13 @@ public class UserService : IUserService
         {
             user.Password = BCrypt.Net.BCrypt.HashPassword(dto.Password);
         }
-
         if (dto.Bio != null)
         {
             user.Bio = dto.Bio;
         }
-
-        ServiceResult<string> uploadResult;
-        if (dto.Image != null && dto.Image.Length > 0)
+        if (dto.Image != null)
         {
-            uploadResult = await _fileService.UploadImageAsync(dto.Image);
-            if(!uploadResult.Success)
-            {
-                return ServiceResult<UserResponse?>.Fail(uploadResult.Error!);
-            }
+            user.Image = dto.Image;
         }
 
         await _context.SaveChangesAsync();

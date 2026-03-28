@@ -23,16 +23,8 @@ class FileService : IFileService
         return fullImageUrl;
     }
 
-    public async Task<ServiceResult<string>> UploadImageAsync(IFormFile file)
+    public async Task<string> UploadAsync(Stream fileStream, string extension)
     {
-        var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".bmp" };
-        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-
-        if(!allowedExtensions.Contains(extension))
-        {
-            return ServiceResult<string>.Fail("Invalid file type. Only JPG, PNG, and BMP are allowed.");
-        }
-
         var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
         if(!Directory.Exists(uploadsFolder))
         {
@@ -44,9 +36,9 @@ class FileService : IFileService
 
         using(var stream = new FileStream(filePath, FileMode.Create))
         {
-            await file.CopyToAsync(stream);
+            await fileStream.CopyToAsync(stream);
         }
 
-       return ServiceResult<string>.Ok($"/uploads/{uniqueFileName}");
+       return $"/uploads/{uniqueFileName}";
     }
 }
