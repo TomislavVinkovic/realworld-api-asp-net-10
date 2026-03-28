@@ -153,7 +153,7 @@ public class UserService : IUserService
         {
             if (await _context.Users.AnyAsync(u => u.Email == dto.Email))
             {
-                throw new ArgumentException("email");
+                return ServiceResult<UserResponse?>.Fail("email has already been taken");
             }
             
             user.Email = dto.Email;
@@ -163,7 +163,7 @@ public class UserService : IUserService
         {
             if (await _context.Users.AnyAsync(u => u.Username == dto.Username))
             {
-                throw new ArgumentException("username");
+                return ServiceResult<UserResponse?>.Fail("email has already been taken");
             }
             user.Username = dto.Username;
         }
