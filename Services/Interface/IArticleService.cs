@@ -1,3 +1,4 @@
+using RealWorld.Common;
 using RealWorld.Models.DTOs;
 using RealWorld.Models.DTOs.Articles;
 using RealWorld.Models.Entities;
@@ -5,17 +6,17 @@ using RealWorld.Models.Entities;
 namespace RealWorld.Services.Interface;
 
 public interface IArticleService {
-    public Task<(IEnumerable<ArticleDto> articles, int Count)> GetArticlesAsync(
+    public Task<ServiceResult<ArticleListResponse>> GetArticlesAsync(
         ArticleQueryParameters query, 
         bool isFeed = false
     );
-    public Task<ArticleDto?> GetArticleBySlugAsync(string slug);
+    public Task<ServiceResult<ArticleResponse?>> GetArticleBySlugAsync(string slug);
     
-    public Task<ArticleDto> CreateAsync(CreateArticleDto dto);
-    public Task<ArticleDto?> UpdateAsync(string slug, UpdateArticleDto dto);
-    public Task<bool> DeleteAsync(string slug);
+    public Task<ServiceResult<ArticleResponse>> CreateAsync(CreateArticleDto dto);
+    public Task<ServiceResult<ArticleResponse?>> UpdateAsync(string slug, UpdateArticleDto dto);
+    public Task<ServiceResult<bool>> DeleteAsync(string slug);
 
-    public Task<ArticleDto?> FavoriteArticleAsync(string slug);
-    public Task<ArticleDto?> UnfavoriteArticleAsync(string slug);
+    public Task<ServiceResult<ArticleResponse?>> FavoriteArticleAsync(string slug);
+    public Task<ServiceResult<ArticleResponse?>> UnfavoriteArticleAsync(string slug);
 
 }

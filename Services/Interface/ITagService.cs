@@ -1,6 +1,9 @@
+using RealWorld.Common;
+using RealWorld.Models.DTOs.Tags;
+
 namespace RealWorld.Services.Interface;
 
 public interface ITagService
 {
-    public Task<IEnumerable<string>> GetTagsAsync();
+    public Task<ServiceResult<TagListResponse>> GetTagsAsync();
 }

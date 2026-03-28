@@ -1,3 +1,5 @@
+using RealWorld.Common;
+
 namespace RealWorld.Services.Interface;
 
 class FileService : IFileService
@@ -21,14 +23,14 @@ class FileService : IFileService
         return fullImageUrl;
     }
 
-    public async Task<string> UploadImageAsync(IFormFile file)
+    public async Task<ServiceResult<string>> UploadImageAsync(IFormFile file)
     {
         var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".bmp" };
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
         if(!allowedExtensions.Contains(extension))
         {
-            throw new ArgumentException("Invalid file type. Only JPG, PNG, and BMP are allowed.");
+            return ServiceResult<string>.Fail("Invalid file type. Only JPG, PNG, and BMP are allowed.");
         }
 
         var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads");
@@ -45,8 +47,6 @@ class FileService : IFileService
             await file.CopyToAsync(stream);
         }
 
-       return $"/uploads/{uniqueFileName}";
+       return ServiceResult<string>.Ok($"/uploads/{uniqueFileName}");
     }
-
-    
 }

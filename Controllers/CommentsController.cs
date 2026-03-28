@@ -8,7 +8,7 @@ namespace RealWorld.Controllers;
 [Route("api/articles")]
 [ApiController]
 [Authorize]
-public class CommentsController : ControllerBase
+public class CommentsController : ApiControllerBase
 {
     private readonly ICommentService _commentService;
 
@@ -24,34 +24,21 @@ public class CommentsController : ControllerBase
     [HttpGet("{slug}/comments")]
     public async Task<ActionResult> GetComments(string slug)
     {
-        var comments = await _commentService.GetCommentsForArticleAsync(slug);
-        if(comments == null)
-        {
-            return NotFound("Article not found");
-        }
-
-        return Ok(new CommentListResponse(comments));
+        var result = await _commentService.GetCommentsForArticleAsync(slug);
+        return HandleResult(result);
     }
 
     [HttpPost("{slug}/comments")]
     public async Task<ActionResult> CreateComment(CreateCommentRequest request, string slug)
     {
-        var comment = await _commentService.CreateAsync(request.comment, slug);
-        if(comment == null)
-        {
-            return NotFound("Article not found");
-        }
-        return Ok(new CommentResponse(comment));
+        var result = await _commentService.CreateAsync(request.comment, slug);
+        return HandleResult(result);
     }
 
     [HttpDelete("{slug}/comments/{id}")]
     public async Task<ActionResult> DeleteComment(string slug, int id)
     {
-        bool deleted = await _commentService.DeleteAsync(id);
-        if(!deleted)
-        {
-            return NotFound("Comment not found");
-        }
-        return Ok();
+        var result = await _commentService.DeleteAsync(id);
+        return HandleResult(result);
     }
 }

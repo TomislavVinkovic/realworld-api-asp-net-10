@@ -1,5 +1,3 @@
-using RealWorld.Data;
-using RealWorld.Models.DTOs;
 using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +8,7 @@ namespace RealWorld.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
-public class ArticlesController : ControllerBase
+public class ArticlesController : ApiControllerBase
 {
     private readonly IArticleService _articleService;
 
@@ -26,78 +24,57 @@ public class ArticlesController : ControllerBase
     [HttpGet("")]
     public async Task<ActionResult> List([FromQuery] ArticleQueryParameters query)
     {
-        var (articles, articlesCount) = await _articleService.GetArticlesAsync(query);
-        return Ok(new ArticleListResponse(articles, articlesCount));
+        var result = await _articleService.GetArticlesAsync(query);
+        return HandleResult(result);
     }
 
     [HttpGet("feed")]
     public async Task<ActionResult> Feed([FromQuery] ArticleQueryParameters query)
     {
-        var (articles, articlesCount) = await _articleService.GetArticlesAsync(query, isFeed: true);
-        return Ok(new ArticleListResponse(articles, articlesCount));
+        var result = await _articleService.GetArticlesAsync(query, isFeed: true);
+        return HandleResult(result);
     }
 
     [AllowAnonymous]
     [HttpGet("{slug}")]
     public async Task<ActionResult> GetArticle(string slug)
     {
-        var article = await _articleService.GetArticleBySlugAsync(slug);
-        if(article == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(new ArticleResponse(article));
+        var result = await _articleService.GetArticleBySlugAsync(slug);
+        return HandleResult(result);
     }
 
     [HttpPost("")]
     public async Task<ActionResult> CreateArticle(CreateArticleRequest request)
     {
-        var article = await _articleService.CreateAsync(request.article);
-        return Ok(new ArticleResponse(article));
+        var result = await _articleService.CreateAsync(request.article);
+        return HandleResult(result);
     }
 
     [HttpPut("{slug}")]
     public async Task<ActionResult> UpdateArticle(string slug, UpdateArticleRequest request)
     {
-        var article = await _articleService.UpdateAsync(slug, request.article);
-        if(article == null)
-        {
-            return NotFound();
-        }
-        return Ok(new ArticleResponse(article));
+        var result = await _articleService.UpdateAsync(slug, request.article);
+        return HandleResult(result);
     }
 
     [HttpDelete("{slug}")]
     public async Task<ActionResult> DeleteArticle(string slug)
     {
-        bool deleted = await _articleService.DeleteAsync(slug);
-        if(!deleted)
-        {
-            return NotFound();
-        }
-        return Ok();
+        var result = await _articleService.DeleteAsync(slug);
+        return HandleResult(result);
     }
 
     [HttpPost("{slug}/favorite")]
     public async Task<ActionResult> FavoriteArticle(string slug)
     {
-        var article = await _articleService.FavoriteArticleAsync(slug);
-        if(article == null)
-        {
-            return NotFound();
-        }
-        return Ok(new ArticleResponse(article));
+        var result = await _articleService.FavoriteArticleAsync(slug);
+        return HandleResult(result);
     }
 
-    [HttpDelete("{slug}/unfavorite")]
+    [HttpDelete("{slug}/favorite")]
     public async Task<ActionResult> UnfavoriteArticle(string slug)
     {
-        var article = await _articleService.UnfavoriteArticleAsync(slug);
-        if(article == null)
-        {
-            return NotFound();
-        }
-        return Ok(new ArticleResponse(article));
+        var result = await _articleService.UnfavoriteArticleAsync(slug);
+        return HandleResult(result);
     }
 }

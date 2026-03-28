@@ -1,12 +1,11 @@
 using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Mvc;
-using RealWorld.Models.DTOs.Tags;
 
 namespace RealWorld.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class TagsController : ControllerBase
+public class TagsController : ApiControllerBase
 {
     private readonly ITagService _tagService;
 
@@ -20,7 +19,7 @@ public class TagsController : ControllerBase
     [HttpGet("")]
     public async Task<IActionResult> List()
     {
-        var tagList = await _tagService.GetTagsAsync();
-        return Ok(new TagListResponse(tagList.ToList()));
+        var result = await _tagService.GetTagsAsync();
+        return HandleResult(result);
     }
 }

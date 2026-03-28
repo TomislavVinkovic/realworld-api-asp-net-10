@@ -1,11 +1,11 @@
 using System.Security.Claims;
 using RealWorld.Data;
-using RealWorld.Models.DTOs;
 using RealWorld.Models.Entities;
 using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using RealWorld.Models.DTOs.Auth;
 using Mapster;
+using RealWorld.Common;
 
 namespace RealWorld.Services;
 
@@ -29,13 +29,13 @@ public class UserService : IUserService
         _httpContextService = httpContextService;
     }
 
-    public async Task<UserDto?> LoginAsync(LoginDto dto)
+    public async Task<ServiceResult<UserResponse?>> LoginAsync(LoginDto dto)
     {
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == dto.Email);
 
         if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.Password))
         {
-            return null;
+            return ServiceResult<UserResponse?>.Unauthorized("Invalid credentials");
         }
 
         var accessToken = _jwtService.GenerateAccessToken(user);
@@ -47,10 +47,12 @@ public class UserService : IUserService
         await _context.SaveChangesAsync();
         
         var userDto = await UserDtoFactory(user, accessToken, refreshToken);
-        return userDto;
+        var response = new UserResponse(userDto);
+
+        return ServiceResult<UserResponse?>.Ok(response);
     }
 
-    public async Task<UserDto> RegisterAsync(RegisterDto dto)
+    public async Task<ServiceResult<UserResponse>> RegisterAsync(RegisterDto dto)
     {   
         var user = new User
         {
@@ -66,21 +68,18 @@ public class UserService : IUserService
         var refreshToken = _jwtService.GenerateRefreshToken();
 
         var userDto = await UserDtoFactory(user, accessToken, refreshToken);
-        return userDto;
+        var response = new UserResponse(userDto);
+        return ServiceResult<UserResponse>.Ok(response);
     }
 
-    public async Task<bool> LogoutAsync()
+    public async Task<ServiceResult<bool>> LogoutAsync()
     {
         var userId = _httpContextService.GetCurrentUserId();
-        if (userId == null)
-        {
-            return false;
-        }
 
         var user = await _context.Users.FindAsync(userId);
         if (user == null)
         {
-            return false;
+            return ServiceResult<bool>.Unauthorized();
         }
 
         user.RefreshToken = null;
@@ -88,23 +87,24 @@ public class UserService : IUserService
 
         await _context.SaveChangesAsync();
 
-        return true;
+        return ServiceResult<bool>.Ok(true);
     }
 
-    public async Task<UserDto?> RefreshAsync(TokenRequest request)
+    // To continue from here
+    public async Task<ServiceResult<UserResponse?>> RefreshAsync(TokenRequest request)
     {
         var principal = _jwtService.GetPrincipalFromExpiredToken(request.AccessToken);
         var userIdString = principal.FindFirstValue(ClaimTypes.NameIdentifier);
         
         if (string.IsNullOrEmpty(userIdString))
         {
-            return null;
+            return ServiceResult<UserResponse?>.BadRequest("Invalid or expired refresh token. Please log in again.");
         }
 
         var user = await _context.Users.FindAsync(int.Parse(userIdString));
         if (user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.UtcNow)
         {
-            return null;
+            return ServiceResult<UserResponse?>.BadRequest("Invalid or expired refresh token. Please log in again.");
         }
 
         var newAccessToken = _jwtService.GenerateAccessToken(user);
@@ -114,35 +114,39 @@ public class UserService : IUserService
         await _context.SaveChangesAsync();
 
         var userDto = await UserDtoFactory(user, newAccessToken, newRefreshToken);
-        return userDto;
+        var response = new UserResponse(userDto);
+
+        return ServiceResult<UserResponse?>.Ok(response);
     }
 
-    public async Task<UserDto?> GetCurrentUserAsync(string currentToken)
+    public async Task<ServiceResult<UserResponse?>> GetCurrentUserAsync(string currentToken)
     {
         var userId = _httpContextService.GetCurrentUserId();
         if (userId == null)
         {
-            return null;
+            return ServiceResult<UserResponse?>.NotFound();
         }
 
         var user = await _context.Users.FindAsync(userId);
         if (user == null)
         {
-            return null;
+            return ServiceResult<UserResponse?>.NotFound();
         }
 
         var userDto = await UserDtoFactory(user, currentToken);
-        return userDto;
+        var response = new UserResponse(userDto);
+
+        return ServiceResult<UserResponse?>.Ok(response);
     }
 
-    public async Task<UserDto?> UpdateUserAsync(UpdateUserDto dto)
+    public async Task<ServiceResult<UserResponse?>> UpdateUserAsync(UpdateUserFormDto dto)
     {
         var userId = _httpContextService.GetCurrentUserId();
         var user = await _context.Users.FindAsync(userId);
         
         if (user == null)
         {
-            return null;
+            return ServiceResult<UserResponse?>.NotFound();
         }
 
         if (!string.IsNullOrEmpty(dto.Email) && dto.Email != user.Email)
@@ -173,9 +177,15 @@ public class UserService : IUserService
         {
             user.Bio = dto.Bio;
         }
-        if (dto.Image != null)
+
+        ServiceResult<string> uploadResult;
+        if (dto.Image != null && dto.Image.Length > 0)
         {
-            user.Image = dto.Image;
+            uploadResult = await _fileService.UploadImageAsync(dto.Image);
+            if(!uploadResult.Success)
+            {
+                return ServiceResult<UserResponse?>.Fail(uploadResult.Error!);
+            }
         }
 
         await _context.SaveChangesAsync();
@@ -183,7 +193,9 @@ public class UserService : IUserService
         var newAccessToken = _jwtService.GenerateAccessToken(user);
 
         var userDto = await UserDtoFactory(user, newAccessToken);
-        return userDto;
+        var response = new UserResponse(userDto);
+
+        return ServiceResult<UserResponse?>.Ok(response);
     }
 
     private async Task<UserDto> UserDtoFactory(

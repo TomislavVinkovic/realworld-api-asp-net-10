@@ -4,6 +4,7 @@ using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using RealWorld.Models.DTOs.Comments;
 using Mapster;
+using RealWorld.Common;
 
 namespace RealWorld.Services;
 
@@ -21,7 +22,7 @@ public class CommentService : ICommentService
         _httpContextService = httpContextService;
     }
 
-    public async Task<IEnumerable<CommentDto>?> GetCommentsForArticleAsync(string slug)
+    public async Task<ServiceResult<CommentListResponse?>> GetCommentsForArticleAsync(string slug)
     {
         var article = await _context.Articles
             .Include(a => a.Comments)
@@ -30,7 +31,7 @@ public class CommentService : ICommentService
 
         if(article == null)
         {
-            return null;
+            return ServiceResult<CommentListResponse?>.NotFound($"Article with slug '{slug}' was not found.");
         }
 
         var followedAuthorIds = new HashSet<int>();
@@ -47,26 +48,30 @@ public class CommentService : ICommentService
                 .Where(f => commenterIds.Contains(f.Id))
                 .Select(f => f.Id)
                 .ToListAsync();
+            followedAuthorIds = [.. followedList];
 
-            // Put them in a HashSet for lightning-fast lookups in the next step
-            followedAuthorIds = new HashSet<int>(followedList);
-
-            return article.Comments.Select(c =>
+            var commentListWithFollowing = article.Comments.Select(c =>
                 CommentDtoFactory(c, followedAuthorIds.Contains(c.Author.Id))
             );
+            var responseFollowing = new CommentListResponse(commentListWithFollowing);
+
+            return ServiceResult<CommentListResponse?>.Ok(responseFollowing);
         }
         
-        return article.Comments.Select(c => CommentDtoFactory(c, false));
+        var commentList = article.Comments.Select(c => CommentDtoFactory(c, false));
+        var response = new CommentListResponse(commentList);
+
+        return ServiceResult<CommentListResponse?>.Ok(response);
     }
 
-    public async Task<CommentDto?> CreateAsync(CreateCommentDto dto, string slug)
+    public async Task<ServiceResult<CommentResponse?>> CreateAsync(CreateCommentDto dto, string slug)
     {
         var currentUserId = _httpContextService.GetCurrentUserId()!;
 
         var article = await _context.Articles.FirstOrDefaultAsync(a => a.Slug == slug);
         if(article == null)
         {
-            return null;
+            return ServiceResult<CommentResponse?>.NotFound("Comment not found.");
         }
 
         var newComment = new Comment
@@ -80,10 +85,13 @@ public class CommentService : ICommentService
         await _context.SaveChangesAsync();
         await _context.Entry(newComment).Reference(c => c.Author).LoadAsync();
 
-        return CommentDtoFactory(newComment, false);
+        var commentDto = CommentDtoFactory(newComment, false);
+        var response = new CommentResponse(commentDto);
+
+        return ServiceResult<CommentResponse?>.Ok(response);
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<ServiceResult<bool>> DeleteAsync(int id)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
 
@@ -91,18 +99,18 @@ public class CommentService : ICommentService
             .FirstOrDefaultAsync(c => c.Id == id);
         if (comment == null)
         {
-            return false;
+            return ServiceResult<bool>.NotFound("Comment not found.");
         }
         if (comment.AuthorId != currentUserId)
         {
-            throw new UnauthorizedAccessException("You do not have permission to delete this article.");
+            return ServiceResult<bool>.Unauthorized("You do not have permission to delete this article.");
         }
 
         await _context.Comments
             .Where(a => a.Id == id)
             .ExecuteDeleteAsync();
 
-        return true;
+        return ServiceResult<bool>.Ok(true);
     }
 
     private CommentDto CommentDtoFactory(Comment comment, bool isFollowing)

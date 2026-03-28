@@ -7,7 +7,8 @@ namespace RealWorld.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class ProfilesController : ControllerBase
+[Authorize]
+public class ProfilesController : ApiControllerBase
 {
     private IProfileService _profileService;
 
@@ -23,43 +24,22 @@ public class ProfilesController : ControllerBase
     [HttpGet("{username}")]
     public async Task<ActionResult<ProfileResponse>> GetProfile(string username)
     {
-        var profile = await _profileService.GetProfileByUsernameAsync(username);
-        if(profile == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(
-            new ProfileResponse(profile)
-        );
+        var result = await _profileService.GetProfileByUsernameAsync(username);
+        return HandleResult(result);
     }
 
     [HttpPost("{username}/follow")]
     public async Task<ActionResult<ProfileResponse>> Follow(string username)
     {
-        var profile = await _profileService.FollowUserAsync(username);
-        if(profile == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(
-            new ProfileResponse(profile)
-        );
+        var result = await _profileService.FollowUserAsync(username);
+        return HandleResult(result);
     }
 
-    [HttpDelete("{username}/unfollow")]
+    [HttpDelete("{username}/follow")]
     public async Task<ActionResult<ProfileResponse>> Unfollow(string username)
     {
-        var profile = await _profileService.UnfollowUserAsync(username);
-        if(profile == null)
-        {
-            return NotFound();
-        }
-
-        return Ok(
-            new ProfileResponse(profile)
-        );
+        var result = await _profileService.UnfollowUserAsync(username);
+        return HandleResult(result);
     }
 
 }

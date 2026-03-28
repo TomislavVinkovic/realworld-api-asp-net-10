@@ -1,10 +1,11 @@
+using RealWorld.Common;
 using RealWorld.Models.DTOs.Comments;
 
 namespace RealWorld.Services.Interface;
 
 public interface ICommentService
 {
-    public Task<IEnumerable<CommentDto>?> GetCommentsForArticleAsync(string slug);
-    public Task<CommentDto?> CreateAsync(CreateCommentDto dto, string slug);
-    public Task<bool> DeleteAsync(int id);
+    public Task<ServiceResult<CommentListResponse?>> GetCommentsForArticleAsync(string slug);
+    public Task<ServiceResult<CommentResponse?>> CreateAsync(CreateCommentDto dto, string slug);
+    public Task<ServiceResult<bool>> DeleteAsync(int id);
 }

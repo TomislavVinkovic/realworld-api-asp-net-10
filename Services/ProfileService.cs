@@ -4,6 +4,7 @@ using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using RealWorld.Models.DTOs.Profiles;
 using Mapster;
+using RealWorld.Common;
 
 namespace RealWorld.Services;
 
@@ -24,14 +25,14 @@ public class ProfileService : IProfileService
         _fileService = fileService;
     }
 
-    public async Task<ProfileDto?> GetProfileByUsernameAsync(string username)
+    public async Task<ServiceResult<ProfileResponse?>> GetProfileByUsernameAsync(string username)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
 
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         if(user == null)
         {
-            return null;
+            return ServiceResult<ProfileResponse?>.NotFound($"User with ${username} not found.");
         }
 
         bool isFollowingUser = false;
@@ -42,17 +43,16 @@ public class ProfileService : IProfileService
                 .FirstOrDefaultAsync(u => u.Id == currentUserId);
             isFollowingUser = currentUser!.Following.Any(u => u.Username == user.Username);
         }
+        
+        var profileDto = ProfileDtoFactory(user, isFollowingUser);
+        var response = new ProfileResponse(profileDto);
 
-        return ProfileDtoFactory(user, isFollowingUser);
+        return ServiceResult<ProfileResponse?>.Ok(response);
     }
 
-    public async Task<ProfileDto?> FollowUserAsync(string username)
+    public async Task<ServiceResult<ProfileResponse?>> FollowUserAsync(string username)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
-        if(currentUserId == null)
-        {
-            return null;
-        }
 
         var currentUser = await _context.Users
             .Include(u => u.Following)
@@ -64,7 +64,7 @@ public class ProfileService : IProfileService
 
         if(userToFollow == null)
         {
-            return null;
+            return ServiceResult<ProfileResponse?>.NotFound($"User with ${username} not found.");
         }
 
         if(!currentUser!.Following.Any(u => u.Username == userToFollow.Username))
@@ -72,16 +72,16 @@ public class ProfileService : IProfileService
             currentUser.Following.Add(userToFollow);
             await _context.SaveChangesAsync();
         }
-        return ProfileDtoFactory(userToFollow, true);
+
+        var profileDto = ProfileDtoFactory(userToFollow, true);
+        var response = new ProfileResponse(profileDto);
+
+        return ServiceResult<ProfileResponse?>.Ok(response);
     }
 
-    public async Task<ProfileDto?> UnfollowUserAsync(string username)
+    public async Task<ServiceResult<ProfileResponse?>> UnfollowUserAsync(string username)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
-        if(currentUserId == null)
-        {
-            return null;
-        }
 
         var currentUser = await _context.Users
             .Include(u => u.Following)
@@ -92,7 +92,7 @@ public class ProfileService : IProfileService
 
         if(userToUnfollow == null)
         {
-            return null;
+            return ServiceResult<ProfileResponse?>.NotFound($"User with ${username} not found.");
         }
 
         if(currentUser!.Following.Any(u => u.Username == userToUnfollow.Username))
@@ -101,7 +101,10 @@ public class ProfileService : IProfileService
             await _context.SaveChangesAsync();
         }
 
-        return ProfileDtoFactory(userToUnfollow, false);
+        var profileDto = ProfileDtoFactory(userToUnfollow, false);
+        var response = new ProfileResponse(profileDto);
+
+        return ServiceResult<ProfileResponse?>.Ok(response);
     }
 
     private ProfileDto ProfileDtoFactory(User user, bool isFollowingUser)

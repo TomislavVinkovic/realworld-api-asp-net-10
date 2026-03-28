@@ -4,6 +4,7 @@ using RealWorld.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using RealWorld.Models.DTOs.Articles;
 using Mapster;
+using RealWorld.Common;
 
 namespace RealWorld.Services;
 
@@ -25,7 +26,7 @@ public class ArticleService : IArticleService {
         _fileService = fileService;
     }
 
-    public async Task<(IEnumerable<ArticleDto> articles, int Count)> GetArticlesAsync(
+    public async Task<ServiceResult<ArticleListResponse>> GetArticlesAsync(
         ArticleQueryParameters query, 
         bool isFeed = false
     )
@@ -84,10 +85,14 @@ public class ArticleService : IArticleService {
             }
         );
 
-        return new (returnArticles, articleCount);
+        var response = new ArticleListResponse(
+            returnArticles, 
+            articleCount
+        );
+        return ServiceResult<ArticleListResponse>.Ok(response);
     }
 
-    public async Task<ArticleDto?> GetArticleBySlugAsync(string slug)
+    public async Task<ServiceResult<ArticleResponse?>> GetArticleBySlugAsync(string slug)
     {
         var currentUserId = _httpContextService.GetCurrentUserId();
 
@@ -99,7 +104,7 @@ public class ArticleService : IArticleService {
         
         if(article == null)
         {
-            return null;
+            return ServiceResult<ArticleResponse?>.NotFound($"Article with slug '{slug}' was not found.");
         }
 
         bool isFavorited = false;
@@ -109,11 +114,14 @@ public class ArticleService : IArticleService {
             isFollowing = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
             isFavorited = article.FavoritedBy.FirstOrDefault(u => u.Id == currentUserId) != null;
         }
+        
+        var dto = ArticleDtoFactory(article, isFavorited, isFollowing);
+        var response = new ArticleResponse(dto);
 
-        return ArticleDtoFactory(article, isFavorited, isFollowing);
+        return ServiceResult<ArticleResponse?>.Ok(response);
     }
 
-    public async Task<ArticleDto> CreateAsync(CreateArticleDto dto)
+    public async Task<ServiceResult<ArticleResponse>> CreateAsync(CreateArticleDto dto)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
         var currentUser = _context.Users.Find(currentUserId);
@@ -151,10 +159,13 @@ public class ArticleService : IArticleService {
 
         await _context.Entry(article).Reference(a => a.Author).LoadAsync();
 
-        return ArticleDtoFactory(article, true, false);
+        var data = ArticleDtoFactory(article, true, false);
+        var response = new ArticleResponse(data);
+
+        return ServiceResult<ArticleResponse>.Ok(response);
     }
 
-    public async Task<ArticleDto?> UpdateAsync(string slug, UpdateArticleDto dto)
+    public async Task<ServiceResult<ArticleResponse?>> UpdateAsync(string slug, UpdateArticleDto dto)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
 
@@ -166,11 +177,11 @@ public class ArticleService : IArticleService {
         
         if(article == null)
         {
-            return null;
+            return ServiceResult<ArticleResponse?>.NotFound($"Article with slug '{slug}' was not found.");
         }
         if (article.AuthorId != currentUserId)
         {
-            throw new UnauthorizedAccessException("You do not have permission to edit this article.");
+            return ServiceResult<ArticleResponse?>.Unauthorized("You do not have permission to edit this article.");
         }
 
         // Apply partial updates
@@ -191,10 +202,14 @@ public class ArticleService : IArticleService {
         await _context.SaveChangesAsync();
 
         bool isFavorited = article.FavoritedBy.FirstOrDefault(u => u.Id == currentUserId) != null;
-        return ArticleDtoFactory(article, isFavorited, false);
+
+        var articleDto = ArticleDtoFactory(article, isFavorited, false);
+        var response = new ArticleResponse(articleDto);
+
+        return ServiceResult<ArticleResponse?>.Ok(response);
     }
 
-    public async Task<bool> DeleteAsync(string slug)
+    public async Task<ServiceResult<bool>> DeleteAsync(string slug)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
 
@@ -204,21 +219,21 @@ public class ArticleService : IArticleService {
             .FirstOrDefaultAsync();
         if (authorId == null)
         {
-            return false;
+            return ServiceResult<bool>.NotFound($"Article with slug '{slug}' was not found.");
         }
         if (authorId != currentUserId)
         {
-            throw new UnauthorizedAccessException("You do not have permission to delete this article.");
+            return ServiceResult<bool>.Unauthorized("You do not have permission to delete this article");
         }
 
         await _context.Articles
             .Where(a => a.Slug == slug)
             .ExecuteDeleteAsync();
 
-        return true;
+        return ServiceResult<bool>.Ok(true);
     }
 
-    public async Task<ArticleDto?> FavoriteArticleAsync(string slug)
+    public async Task<ServiceResult<ArticleResponse?>> FavoriteArticleAsync(string slug)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
         var article = await _context.Articles
@@ -229,7 +244,7 @@ public class ArticleService : IArticleService {
 
         if (article == null)
         {
-            return null;
+            return ServiceResult<ArticleResponse?>.NotFound($"Article with slug '{slug}' was not found.");
         }
 
         if(!article.FavoritedBy.Any(u => u.Id == currentUserId))
@@ -239,10 +254,14 @@ public class ArticleService : IArticleService {
             await _context.SaveChangesAsync();
         }
         bool isFollowing = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
-        return ArticleDtoFactory(article, true, isFollowing);
+        
+        var dto = ArticleDtoFactory(article, true, isFollowing);
+        var response = new ArticleResponse(dto);
+
+        return ServiceResult<ArticleResponse?>.Ok(response);
     }
 
-    public async Task<ArticleDto?> UnfavoriteArticleAsync(string slug)
+    public async Task<ServiceResult<ArticleResponse?>> UnfavoriteArticleAsync(string slug)
     {
         int? currentUserId = _httpContextService.GetCurrentUserId();
         var article = await _context.Articles
@@ -253,17 +272,21 @@ public class ArticleService : IArticleService {
 
         if (article == null)
         {
-            return null;
+            ServiceResult<ArticleDto?>.NotFound($"Article with slug '{slug}' was not found.");
         }
 
-        if(article.FavoritedBy.Any(u => u.Id == currentUserId))
+        if(article!.FavoritedBy.Any(u => u.Id == currentUserId))
         {
             var user = await _context.Users.FindAsync(currentUserId);
             article.FavoritedBy.Remove(user!);
             await _context.SaveChangesAsync();
         }
         bool isFollowing = article.Author.Followers.FirstOrDefault(u => u.Id == currentUserId) != null;
-        return ArticleDtoFactory(article, false, isFollowing);
+
+        var dto = ArticleDtoFactory(article, false, isFollowing);
+        var response = new ArticleResponse(dto);
+
+        return ServiceResult<ArticleResponse?>.Ok(response);
     }
 
     private ArticleDto ArticleDtoFactory(Article article, bool isFavorited, bool isFollowing)
