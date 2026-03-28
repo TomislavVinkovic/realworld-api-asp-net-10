@@ -2,6 +2,7 @@ using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealWorld.Models.DTOs.Profiles;
+using RealWorld.Extensions;
 
 namespace RealWorld.Controllers;
 
@@ -24,21 +25,21 @@ public class ProfilesController : ApiControllerBase
     [HttpGet("{username}")]
     public async Task<ActionResult<ProfileResponse>> GetProfile(string username)
     {
-        var result = await _profileService.GetProfileByUsernameAsync(username);
+        var result = await _profileService.GetProfileByUsernameAsync(username, User.GetOptionalUserId());
         return HandleResult(result);
     }
 
     [HttpPost("{username}/follow")]
     public async Task<ActionResult<ProfileResponse>> Follow(string username)
     {
-        var result = await _profileService.FollowUserAsync(username);
+        var result = await _profileService.FollowUserAsync(username, User.GetRequiredUserId());
         return HandleResult(result);
     }
 
     [HttpDelete("{username}/follow")]
     public async Task<ActionResult<ProfileResponse>> Unfollow(string username)
     {
-        var result = await _profileService.UnfollowUserAsync(username);
+        var result = await _profileService.UnfollowUserAsync(username, User.GetRequiredUserId());
         return HandleResult(result);
     }
 

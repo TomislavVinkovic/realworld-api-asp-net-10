@@ -14,19 +14,16 @@ public class UserService : IUserService
     private readonly AppDbContext _context;
     private readonly IJwtService _jwtService;
     private readonly IFileService _fileService;
-    private readonly IHttpContextService _httpContextService;
 
     public UserService(
         AppDbContext context, 
         IJwtService jwtService,
-        IFileService fileService,
-        IHttpContextService httpContextService
+        IFileService fileService
     )
     {
         _context = context;
         _jwtService = jwtService;
         _fileService = fileService;
-        _httpContextService = httpContextService;
     }
 
     public async Task<ServiceResult<UserResponse?>> LoginAsync(LoginDto dto)
@@ -72,10 +69,8 @@ public class UserService : IUserService
         return ServiceResult<UserResponse>.Ok(response);
     }
 
-    public async Task<ServiceResult<bool>> LogoutAsync()
+    public async Task<ServiceResult<bool>> LogoutAsync(int userId)
     {
-        var userId = _httpContextService.GetCurrentUserId();
-
         var user = await _context.Users.FindAsync(userId);
         if (user == null)
         {
@@ -119,14 +114,8 @@ public class UserService : IUserService
         return ServiceResult<UserResponse?>.Ok(response);
     }
 
-    public async Task<ServiceResult<UserResponse?>> GetCurrentUserAsync(string currentToken)
+    public async Task<ServiceResult<UserResponse?>> GetCurrentUserAsync(string currentToken, int userId)
     {
-        var userId = _httpContextService.GetCurrentUserId();
-        if (userId == null)
-        {
-            return ServiceResult<UserResponse?>.NotFound();
-        }
-
         var user = await _context.Users.FindAsync(userId);
         if (user == null)
         {
@@ -139,9 +128,8 @@ public class UserService : IUserService
         return ServiceResult<UserResponse?>.Ok(response);
     }
 
-    public async Task<ServiceResult<UserResponse?>> UpdateUserAsync(UpdateUserFormDto dto)
+    public async Task<ServiceResult<UserResponse?>> UpdateUserAsync(UpdateUserFormDto dto, int userId)
     {
-        var userId = _httpContextService.GetCurrentUserId();
         var user = await _context.Users.FindAsync(userId);
         
         if (user == null)

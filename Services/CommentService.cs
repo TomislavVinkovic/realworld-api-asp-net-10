@@ -11,18 +11,12 @@ namespace RealWorld.Services;
 public class CommentService : ICommentService
 {
     private readonly AppDbContext _context;
-    private readonly IHttpContextService _httpContextService;
-    public CommentService
-    (
-        AppDbContext context,
-        IHttpContextService httpContextService
-    )
+    public CommentService(AppDbContext context)
     {
         _context = context;
-        _httpContextService = httpContextService;
     }
 
-    public async Task<ServiceResult<CommentListResponse?>> GetCommentsForArticleAsync(string slug)
+    public async Task<ServiceResult<CommentListResponse?>> GetCommentsForArticleAsync(string slug, int? userId)
     {
         var article = await _context.Articles
             .Include(a => a.Comments)
@@ -37,13 +31,11 @@ public class CommentService : ICommentService
         var followedAuthorIds = new HashSet<int>();
         var commenterIds = article.Comments.Select(c => c.Author.Id).Distinct().ToList();
 
-        var currentUserId = _httpContextService.GetCurrentUserId();
-
-        if(currentUserId.HasValue)
+        if(userId.HasValue)
         {
             var followedList = await _context.Users
                 .AsNoTracking()
-                .Where(u => u.Id == currentUserId)
+                .Where(u => u.Id == userId)
                 .SelectMany(u => u.Following)
                 .Where(f => commenterIds.Contains(f.Id))
                 .Select(f => f.Id)
@@ -64,10 +56,8 @@ public class CommentService : ICommentService
         return ServiceResult<CommentListResponse?>.Ok(response);
     }
 
-    public async Task<ServiceResult<CommentResponse?>> CreateAsync(CreateCommentDto dto, string slug)
+    public async Task<ServiceResult<CommentResponse?>> CreateAsync(CreateCommentDto dto, string slug, int userId)
     {
-        var currentUserId = _httpContextService.GetCurrentUserId()!;
-
         var article = await _context.Articles.FirstOrDefaultAsync(a => a.Slug == slug);
         if(article == null)
         {
@@ -77,7 +67,7 @@ public class CommentService : ICommentService
         var newComment = new Comment
         {
             Body = dto.Body,
-            AuthorId = (int)currentUserId,
+            AuthorId = userId,
             ArticleId = article.Id
         };
         _context.Comments.Add(newComment);
@@ -91,17 +81,15 @@ public class CommentService : ICommentService
         return ServiceResult<CommentResponse?>.Ok(response);
     }
 
-    public async Task<ServiceResult<bool>> DeleteAsync(int id)
+    public async Task<ServiceResult<bool>> DeleteAsync(int id, int userId)
     {
-        int? currentUserId = _httpContextService.GetCurrentUserId();
-
         var comment = await _context.Comments
             .FirstOrDefaultAsync(c => c.Id == id);
         if (comment == null)
         {
             return ServiceResult<bool>.NotFound("Comment not found.");
         }
-        if (comment.AuthorId != currentUserId)
+        if (comment.AuthorId != userId)
         {
             return ServiceResult<bool>.Unauthorized("You do not have permission to delete this article.");
         }

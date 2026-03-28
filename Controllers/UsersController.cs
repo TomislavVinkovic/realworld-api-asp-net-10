@@ -2,6 +2,7 @@ using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealWorld.Models.DTOs.Auth;
+using RealWorld.Extensions;
 
 namespace RealWorld.Controllers;
 
@@ -41,7 +42,7 @@ public class UsersController : ApiControllerBase
     [HttpGet("logout")]
     public async Task<ActionResult> Logout()
     {
-        var result = await _userService.LogoutAsync();
+        var result = await _userService.LogoutAsync(User.GetRequiredUserId());
         return HandleResult(result);
     }
 
@@ -52,7 +53,7 @@ public class UsersController : ApiControllerBase
         var currentAccessToken = HttpContext.Request.Headers["Authorization"]
             .FirstOrDefault()?.Split(" ").Last() ?? "";
 
-        var result = await _userService.GetCurrentUserAsync(currentAccessToken);
+        var result = await _userService.GetCurrentUserAsync(currentAccessToken, User.GetRequiredUserId());
         return HandleResult(result);
     }
 
@@ -63,7 +64,7 @@ public class UsersController : ApiControllerBase
         var currentAccessToken = HttpContext.Request.Headers["Authorization"]
             .FirstOrDefault()?.Split(" ").Last() ?? "";
 
-        var result = await _userService.GetCurrentUserAsync(currentAccessToken);
+        var result = await _userService.GetCurrentUserAsync(currentAccessToken, User.GetRequiredUserId());
         return HandleResult(result);
     }
 
@@ -71,7 +72,7 @@ public class UsersController : ApiControllerBase
     [HttpPut("")]
     public async Task<ActionResult> UpdateUser ([FromForm] UpdateUserRequest request)
     {
-        var result = await _userService.UpdateUserAsync(request.user);
+        var result = await _userService.UpdateUserAsync(request.user, User.GetRequiredUserId());
         return HandleResult(result);
     }
 }

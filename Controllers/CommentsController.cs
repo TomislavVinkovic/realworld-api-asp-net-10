@@ -2,6 +2,7 @@ using RealWorld.Services.Interface;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealWorld.Models.DTOs.Comments;
+using RealWorld.Extensions;
 
 namespace RealWorld.Controllers;
 
@@ -24,21 +25,21 @@ public class CommentsController : ApiControllerBase
     [HttpGet("{slug}/comments")]
     public async Task<ActionResult> GetComments(string slug)
     {
-        var result = await _commentService.GetCommentsForArticleAsync(slug);
+        var result = await _commentService.GetCommentsForArticleAsync(slug, User.GetOptionalUserId());
         return HandleResult(result);
     }
 
     [HttpPost("{slug}/comments")]
     public async Task<ActionResult> CreateComment(CreateCommentRequest request, string slug)
     {
-        var result = await _commentService.CreateAsync(request.comment, slug);
+        var result = await _commentService.CreateAsync(request.comment, slug, User.GetRequiredUserId());
         return HandleResult(result);
     }
 
     [HttpDelete("{slug}/comments/{id}")]
     public async Task<ActionResult> DeleteComment(string slug, int id)
     {
-        var result = await _commentService.DeleteAsync(id);
+        var result = await _commentService.DeleteAsync(id, User.GetRequiredUserId());
         return HandleResult(result);
     }
 }

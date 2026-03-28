@@ -11,7 +11,6 @@ namespace RealWorld.Services;
 public class ProfileService : IProfileService
 {
     private readonly AppDbContext _context;
-    private readonly IHttpContextService _httpContextService;
     private readonly IFileService _fileService;
 
     public ProfileService(
@@ -21,14 +20,11 @@ public class ProfileService : IProfileService
     )
     {
         _context = context;
-        _httpContextService = httpContextService;
         _fileService = fileService;
     }
 
-    public async Task<ServiceResult<ProfileResponse?>> GetProfileByUsernameAsync(string username)
+    public async Task<ServiceResult<ProfileResponse?>> GetProfileByUsernameAsync(string username, int? userId)
     {
-        int? currentUserId = _httpContextService.GetCurrentUserId();
-
         var user = await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
         if(user == null)
         {
@@ -36,11 +32,11 @@ public class ProfileService : IProfileService
         }
 
         bool isFollowingUser = false;
-        if(currentUserId != null)
+        if(userId != null)
         {
             var currentUser = await _context.Users
                 .Include(u => u.Following)
-                .FirstOrDefaultAsync(u => u.Id == currentUserId);
+                .FirstOrDefaultAsync(u => u.Id == userId);
             isFollowingUser = currentUser!.Following.Any(u => u.Username == user.Username);
         }
         
@@ -50,13 +46,11 @@ public class ProfileService : IProfileService
         return ServiceResult<ProfileResponse?>.Ok(response);
     }
 
-    public async Task<ServiceResult<ProfileResponse?>> FollowUserAsync(string username)
+    public async Task<ServiceResult<ProfileResponse?>> FollowUserAsync(string username, int userId)
     {
-        int? currentUserId = _httpContextService.GetCurrentUserId();
-
         var currentUser = await _context.Users
             .Include(u => u.Following)
-            .FirstOrDefaultAsync(u => u.Id == currentUserId);
+            .FirstOrDefaultAsync(u => u.Id == userId);
 
         var userToFollow = await _context.Users
             .Where(u => u.Username == username)
@@ -79,13 +73,11 @@ public class ProfileService : IProfileService
         return ServiceResult<ProfileResponse?>.Ok(response);
     }
 
-    public async Task<ServiceResult<ProfileResponse?>> UnfollowUserAsync(string username)
+    public async Task<ServiceResult<ProfileResponse?>> UnfollowUserAsync(string username, int userId)
     {
-        int? currentUserId = _httpContextService.GetCurrentUserId();
-
         var currentUser = await _context.Users
             .Include(u => u.Following)
-            .FirstOrDefaultAsync(u => u.Id == currentUserId);
+            .FirstOrDefaultAsync(u => u.Id == userId);
         var userToUnfollow = await _context.Users
             .Where(u => u.Username == username)
             .FirstOrDefaultAsync();
