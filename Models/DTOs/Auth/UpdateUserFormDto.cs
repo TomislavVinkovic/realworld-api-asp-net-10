@@ -1,5 +1,3 @@
-using RealWorld.Extensions.Validation;
-
 namespace RealWorld.Models.DTOs.Auth;
 
 public class UpdateUserFormDto
@@ -10,6 +8,5 @@ public class UpdateUserFormDto
     public string? Bio { get; set; }
     
     // IFormFile catches the physical file from the multipart/form-data request
-    [ValidImage]
     public IFormFile? Image { get; set; } 
 }
