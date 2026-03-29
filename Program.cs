@@ -10,6 +10,7 @@ using FluentValidation;
 using RealWorld.Mappings;
 using RealWorld.Models.Validators.Filters;
 using RealWorld.Middleware;
+using RealWorld.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,6 +52,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             }
         };
     });
+builder.Services.Configure<JwtSettingsOptions>(
+      builder.Configuration.GetSection("JwtSettings"));
 
 builder.Services.AddControllers(options =>
 {

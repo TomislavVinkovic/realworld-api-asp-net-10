@@ -5,22 +5,22 @@ using System.Text;
 using RealWorld.Models.Entities;
 using RealWorld.Services.Interface;
 using Microsoft.IdentityModel.Tokens;
+using RealWorld.Settings;
 
 namespace RealWorld.Services;
 
 class JwtService : IJwtService
 {
-    private readonly IConfiguration _config;
+    private readonly JwtSettingsOptions _jwtOptions;
 
-    public JwtService(IConfiguration config)
+    public JwtService(JwtSettingsOptions jwtOptions)
     {
-        _config = config;
+        _jwtOptions = jwtOptions;
     }
 
     public string GenerateAccessToken(User user)
     {
-        var jwtSettings = _config.GetSection("JwtSettings");
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
@@ -31,10 +31,10 @@ class JwtService : IJwtService
 
         var token = new JwtSecurityToken
         (
-            issuer: jwtSettings["Issuer"],
-            audience: jwtSettings["Audience"],
+            issuer: _jwtOptions.Issuer,
+            audience: _jwtOptions.Audience,
             claims: claims,
-            expires: DateTime.UtcNow.AddMinutes(15),
+            expires: DateTime.UtcNow.AddMinutes(_jwtOptions.ExpiryMinutes),
             signingCredentials: creds
         );
 
@@ -51,15 +51,14 @@ class JwtService : IJwtService
 
     public ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
     {
-        var jwtSettings = _config.GetSection("JwtSettings");
         var tokenValidationParameters = new TokenValidationParameters
         {
             ValidateAudience = true,
             ValidateIssuer = true,
-            ValidIssuer = jwtSettings["Issuer"],
-            ValidAudience = jwtSettings["Audience"],
+            ValidIssuer = _jwtOptions.Issuer,
+            ValidAudience = _jwtOptions.Audience,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["SecretKey"]!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtOptions.SecretKey)),
             ValidateLifetime = false // CRITICAL: We want to extract data even if it's expired
         };
 
