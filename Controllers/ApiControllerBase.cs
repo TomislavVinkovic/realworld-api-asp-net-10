@@ -6,6 +6,12 @@ namespace RealWorld.Controllers;
 [ApiController]
 public abstract class ApiControllerBase : ControllerBase
 {
+    /// <summary>
+    /// Handles the result of a service method. Applicable to most controller methods.
+    /// </summary>
+    /// <typeparam name="T">Type of the response data</typeparam>
+    /// <param name="result">Service result</param>
+    /// <returns>A controller result (Ok, NotFound, Unauthorized etc.)</returns>
     protected ActionResult HandleResult<T>(ServiceResult<T> result)
     {
         if (result.Success)

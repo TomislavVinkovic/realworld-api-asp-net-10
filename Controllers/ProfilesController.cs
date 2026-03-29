@@ -23,6 +23,10 @@ public class ProfilesController : ApiControllerBase
     
     [AllowAnonymous]
     [HttpGet("{username}")]
+    /// <summary>
+    /// Returns a profile based on the username
+    /// </summary>
+    /// <param name="username">User's username</param>
     public async Task<ActionResult<ProfileResponse>> GetProfile(string username)
     {
         var result = await _profileService.GetProfileByUsernameAsync(username, User.GetOptionalUserId());
@@ -30,6 +34,10 @@ public class ProfilesController : ApiControllerBase
     }
 
     [HttpPost("{username}/follow")]
+    /// <summary>
+    /// Follows a profile
+    /// </summary>
+    /// <param name="username">Username of the user the logged in user is trying to follow</param>
     public async Task<ActionResult<ProfileResponse>> Follow(string username)
     {
         var result = await _profileService.FollowUserAsync(username, User.GetRequiredUserId());
@@ -37,6 +45,10 @@ public class ProfilesController : ApiControllerBase
     }
 
     [HttpDelete("{username}/follow")]
+    /// <summary>
+    /// Unfollows a profile
+    /// </summary>
+    /// <param name="username">Username of the user the logged in user is trying to unfollow</param>
     public async Task<ActionResult<ProfileResponse>> Unfollow(string username)
     {
         var result = await _profileService.UnfollowUserAsync(username, User.GetRequiredUserId());

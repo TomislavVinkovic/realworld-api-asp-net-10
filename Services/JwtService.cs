@@ -6,6 +6,7 @@ using RealWorld.Models.Entities;
 using RealWorld.Services.Interface;
 using Microsoft.IdentityModel.Tokens;
 using RealWorld.Settings;
+using Microsoft.Extensions.Options;
 
 namespace RealWorld.Services;
 
@@ -13,9 +14,9 @@ class JwtService : IJwtService
 {
     private readonly JwtSettingsOptions _jwtOptions;
 
-    public JwtService(JwtSettingsOptions jwtOptions)
+    public JwtService(IOptions<JwtSettingsOptions> jwtOptions)
     {
-        _jwtOptions = jwtOptions;
+        _jwtOptions = jwtOptions.Value;
     }
 
     public string GenerateAccessToken(User user)

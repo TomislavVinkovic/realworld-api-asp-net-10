@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RealWorld.Models.DTOs.Articles;
 using RealWorld.Extensions;
-using RealWorld.Models.Entities;
 
 namespace RealWorld.Controllers;
 
@@ -24,6 +23,10 @@ public class ArticlesController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpGet("")]
+    /// <summary>
+    /// Returns a paginated list of articles, optionally filtered by the author, tags or its favorited status for the user
+    /// </summary>
+    /// <param name="query">Parameters for filtering and pagination</param>
     public async Task<ActionResult> List([FromQuery] ArticleQueryParameters query)
     {
         var result = await _articleService.GetArticlesAsync(query, userId: User.GetOptionalUserId());
@@ -31,6 +34,11 @@ public class ArticlesController : ApiControllerBase
     }
 
     [HttpGet("feed")]
+    /// <summary>
+    /// Returns a paginated list of articles from authors
+    /// the user is following, optionally filtered by the author, tags or its favorited status for the user
+    /// </summary>
+    /// <param name="query">Parameters for filtering and pagination</param>
     public async Task<ActionResult> Feed([FromQuery] ArticleQueryParameters query)
     {
         var result = await _articleService.GetArticlesAsync(query, isFeed: true, userId: User.GetRequiredUserId());
@@ -39,6 +47,10 @@ public class ArticlesController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpGet("{slug}")]
+    /// <summary>
+    /// Returns an article based on the slug
+    /// </summary>
+    /// <param name="slug">Article slug</param>
     public async Task<ActionResult> GetArticle(string slug)
     {
         var result = await _articleService.GetArticleBySlugAsync(slug, User.GetRequiredUserId());
@@ -46,6 +58,9 @@ public class ArticlesController : ApiControllerBase
     }
 
     [HttpPost("")]
+    /// <summary>
+    /// Creates a new article
+    /// </summary>
     public async Task<ActionResult> CreateArticle(CreateArticleRequest request)
     {
         var result = await _articleService.CreateAsync(request.article, User.GetRequiredUserId());
@@ -53,6 +68,9 @@ public class ArticlesController : ApiControllerBase
     }
 
     [HttpPut("{slug}")]
+    /// <summary>
+    /// Updates an existing article
+    /// </summary>
     public async Task<ActionResult> UpdateArticle(string slug, UpdateArticleRequest request)
     {
         var result = await _articleService.UpdateAsync(slug, request.article, User.GetRequiredUserId());
@@ -60,6 +78,9 @@ public class ArticlesController : ApiControllerBase
     }
 
     [HttpDelete("{slug}")]
+    /// <summary>
+    /// Deletes an article
+    /// </summary>
     public async Task<ActionResult> DeleteArticle(string slug)
     {
         var result = await _articleService.DeleteAsync(slug, User.GetRequiredUserId());
@@ -67,6 +88,9 @@ public class ArticlesController : ApiControllerBase
     }
 
     [HttpPost("{slug}/favorite")]
+    /// <summary>
+    /// Favorites an article
+    /// </summary>
     public async Task<ActionResult> FavoriteArticle(string slug)
     {
         var result = await _articleService.FavoriteArticleAsync(slug, User.GetRequiredUserId());
@@ -74,6 +98,9 @@ public class ArticlesController : ApiControllerBase
     }
 
     [HttpDelete("{slug}/favorite")]
+    /// <summary>
+    /// Unfavorites an article
+    /// </summary>
     public async Task<ActionResult> UnfavoriteArticle(string slug)
     {
         var result = await _articleService.UnfavoriteArticleAsync(slug, User.GetRequiredUserId());

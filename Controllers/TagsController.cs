@@ -17,6 +17,9 @@ public class TagsController : ApiControllerBase
     }
 
     [HttpGet("")]
+    /// <summary>
+    /// Returns all tags, sorted alphabetically
+    /// </summary>
     public async Task<IActionResult> List()
     {
         var result = await _tagService.GetTagsAsync();
