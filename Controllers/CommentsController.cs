@@ -21,35 +21,35 @@ public class CommentsController : ApiControllerBase
         _commentService = commentService;
     }
 
-    [AllowAnonymous]
-    [HttpGet("{slug}/comments")]
     /// <summary>
     /// Returns all comments for a given article
     /// </summary>
     /// <param name="slug">Article slug</param>
+    [AllowAnonymous]
+    [HttpGet("{slug}/comments")]
     public async Task<ActionResult> GetComments(string slug)
     {
         var result = await _commentService.GetCommentsForArticleAsync(slug, User.GetOptionalUserId());
         return HandleResult(result);
     }
 
-    [HttpPost("{slug}/comments")]
     /// <summary>
     /// Creates a new comment for a given article
     /// </summary>
     /// <param name="slug">Article slug</param>
+    [HttpPost("{slug}/comments")]
     public async Task<ActionResult> CreateComment(CreateCommentRequest request, string slug)
     {
         var result = await _commentService.CreateAsync(request.comment, slug, User.GetRequiredUserId());
         return HandleResult(result);
     }
 
-    [HttpDelete("{slug}/comments/{id}")]
     /// <summary>
     /// Deletes a comment for a given article by its Id
     /// </summary>
     /// <param name="slug">Article slug</param>
     /// <param name="id">Comment id</param>
+    [HttpDelete("{slug}/comments/{id}")]
     public async Task<ActionResult> DeleteComment(string slug, int id)
     {
         var result = await _commentService.DeleteAsync(id, User.GetRequiredUserId());

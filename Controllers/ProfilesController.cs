@@ -21,34 +21,34 @@ public class ProfilesController : ApiControllerBase
         _profileService = profileService;
     }
     
-    [AllowAnonymous]
-    [HttpGet("{username}")]
     /// <summary>
     /// Returns a profile based on the username
     /// </summary>
     /// <param name="username">User's username</param>
+    [AllowAnonymous]
+    [HttpGet("{username}")]
     public async Task<ActionResult<ProfileResponse>> GetProfile(string username)
     {
         var result = await _profileService.GetProfileByUsernameAsync(username, User.GetOptionalUserId());
         return HandleResult(result);
     }
 
-    [HttpPost("{username}/follow")]
     /// <summary>
     /// Follows a profile
     /// </summary>
     /// <param name="username">Username of the user the logged in user is trying to follow</param>
+    [HttpPost("{username}/follow")]
     public async Task<ActionResult<ProfileResponse>> Follow(string username)
     {
         var result = await _profileService.FollowUserAsync(username, User.GetRequiredUserId());
         return HandleResult(result);
     }
 
-    [HttpDelete("{username}/follow")]
     /// <summary>
     /// Unfollows a profile
     /// </summary>
     /// <param name="username">Username of the user the logged in user is trying to unfollow</param>
+    [HttpDelete("{username}/follow")]
     public async Task<ActionResult<ProfileResponse>> Unfollow(string username)
     {
         var result = await _profileService.UnfollowUserAsync(username, User.GetRequiredUserId());
